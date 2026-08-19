@@ -5,26 +5,26 @@ import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
+  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
+        default: "bg-foreground text-background shadow-2xs",
         secondary:
-          "bg-foreground/8 text-foreground [a]:hover:bg-foreground/12",
+          "bg-foreground/[0.06] text-secondary border border-line",
         destructive:
-          "bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20",
+          "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20",
         outline:
-          "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
+          "border-line text-ink hover:bg-surface",
         ghost:
-          "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
-        link: "text-primary underline-offset-4 hover:underline",
-        success: "bg-foreground/10 text-foreground",
-        warning: "bg-foreground/8 text-secondary",
-        info: "bg-foreground/8 text-foreground",
-        muted: "bg-foreground/5 text-secondary",
-        accent: "bg-primary text-primary-foreground",
-        danger: "bg-destructive/15 text-destructive",
+          "hover:bg-foreground/[0.05] text-muted hover:text-ink",
+        link: "text-ink underline-offset-4 hover:underline",
+        success: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+        warning: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
+        info: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20",
+        muted: "bg-foreground/[0.04] text-muted border border-line",
+        accent: "bg-foreground text-background",
+        danger: "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20",
       },
     },
     defaultVariants: {
