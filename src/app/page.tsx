@@ -83,12 +83,28 @@ const QUOTES = [
 
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
+    let lastScrollY = window.scrollY;
+
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 15);
+      const currentScrollY = window.scrollY;
+      setIsScrolled(currentScrollY > 20);
+
+      if (currentScrollY < 60) {
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY + 4 && currentScrollY > 100) {
+        // Scrolling down -> hide navbar
+        setIsVisible(false);
+      } else if (currentScrollY < lastScrollY - 4) {
+        // Scrolling up -> show navbar
+        setIsVisible(true);
+      }
+
+      lastScrollY = currentScrollY;
     };
-    handleScroll();
+
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -98,7 +114,8 @@ export default function LandingPage() {
       <LandingCurtain />
       <header
         className={cn(
-          "landing-header sticky top-0 z-50 transition-all duration-300",
+          "landing-header fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-out",
+          isVisible ? "translate-y-0" : "-translate-y-full shadow-none pointer-events-none",
           isScrolled
             ? "border-b border-line bg-base/85 backdrop-blur-xl shadow-xs"
             : "border-b border-transparent bg-transparent backdrop-blur-none"
