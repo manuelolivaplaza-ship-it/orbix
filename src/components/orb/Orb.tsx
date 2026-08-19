@@ -68,6 +68,7 @@ export function Orb({
   const leftEyeRef = useRef<SVGRectElement>(null);
   const rightEyeRef = useRef<SVGRectElement>(null);
   const shadowRef = useRef<SVGEllipseElement>(null);
+  const flourishRef = useRef<SVGGElement>(null);
   const morph = getOrbMorph(state);
   const palette = getOrbPalette(tone ?? "paper");
   const bodyFill = tone ? palette.body : "var(--orb-body)";
@@ -118,7 +119,7 @@ export function Orb({
     let action: IdleAction | null = null;
     let actionStart = 0;
     let actionDur = 0;
-    let nextAction = hopRef.current ? performance.now() + 2800 + Math.random() * 1800 : 1e12;
+    let nextAction = hopRef.current ? performance.now() + 1200 + Math.random() * 1600 : 1e12;
     let glanceX = 0;
     let glanceY = 0;
     let glanceUntil = 0;
@@ -209,7 +210,7 @@ export function Orb({
           actionDur = 0;
           action = null;
           if (hopNow && !reduced) {
-            nextAction = now + 4200 + Math.random() * 3800;
+            nextAction = now + 1600 + Math.random() * 2000;
           }
         }
       }
@@ -325,6 +326,22 @@ export function Orb({
         shadowRef.current.setAttribute("opacity", String(0.16 * land));
       }
 
+      if (flourishRef.current) {
+        if (actionDur > 0 && kind) {
+          const p = actionProgress;
+          const fOpacity = Math.min(1, Math.sin(p * Math.PI) * 1.5);
+          const fScale = 0.72 + 0.48 * Math.sin(p * Math.PI);
+          const fRot = p * (kind === "spin" ? 360 : kind === "hop" ? 140 : 80);
+          flourishRef.current.style.opacity = String(fOpacity);
+          flourishRef.current.setAttribute(
+            "transform",
+            `translate(50 50) rotate(${fRot}) scale(${fScale}) translate(-50 -50)`,
+          );
+        } else {
+          flourishRef.current.style.opacity = "0";
+        }
+      }
+
       const hopSquint = hopProgress > 0 ? eyeSquint(hopProgress) : 1;
       const smile = kind === "smile" ? smileEyeScale(actionProgress) : 1;
       const squint = hopSquint * smile;
@@ -360,7 +377,7 @@ export function Orb({
   return (
     <motion.div
       ref={rootRef}
-      className={cn("relative inline-flex items-center justify-center", className)}
+      className={cn("relative inline-flex items-center justify-center select-none", className)}
       style={{ width: size, height: size }}
       aria-label={label}
       role="img"
@@ -394,86 +411,42 @@ export function Orb({
 
         <g ref={moverRef}>
         {flourish ? (
-          <motion.g
+          <g
+            ref={flourishRef}
             fill="none"
             strokeLinecap="round"
-            style={{ transformOrigin: "50px 50px" }}
-            animate={{ rotate: [0, 3.2, -2.4, 1.6, 0], scale: [1, 1.015, 0.992, 1.01, 1] }}
-            transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+            style={{ transformOrigin: "50px 50px", opacity: 0 }}
           >
-            <motion.path
+            <path
               d="M62 8 C78 -6, 96 4, 90 22"
               stroke={`url(#t1-${uid})`}
               strokeWidth="3.4"
-              initial={{ pathLength: 1, opacity: 1 }}
-              animate={{ pathLength: [0.92, 1, 0.88, 1], opacity: [0.85, 1, 0.8, 1] }}
-              transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
             />
-            <motion.path
+            <path
               d="M86 28 C104 22, 112 44, 98 52"
               stroke={`url(#t2-${uid})`}
               strokeWidth="3.2"
-              initial={{ pathLength: 1, opacity: 1 }}
-              animate={{ pathLength: [1, 0.9, 1], opacity: [1, 0.8, 1] }}
-              transition={{ duration: 6.2, delay: 0.2, repeat: Infinity, ease: "easeInOut" }}
             />
-            <motion.path
+            <path
               d="M78 78 C92 92, 74 108, 60 96"
               stroke={`url(#t3-${uid})`}
               strokeWidth="3.4"
-              initial={{ pathLength: 1, opacity: 1 }}
-              animate={{ pathLength: [0.9, 1, 0.86, 1], opacity: [0.8, 1, 0.85, 1] }}
-              transition={{ duration: 5.8, delay: 0.15, repeat: Infinity, ease: "easeInOut" }}
             />
-            <motion.path
+            <path
               d="M22 86 C8 98, 18 112, 34 102"
               stroke={`url(#t1-${uid})`}
               strokeWidth="2.8"
-              initial={{ pathLength: 1, opacity: 1 }}
-              animate={{ pathLength: [1, 0.88, 1], opacity: [1, 0.75, 1] }}
-              transition={{ duration: 6.8, delay: 0.3, repeat: Infinity, ease: "easeInOut" }}
             />
-            <motion.path
+            <path
               d="M18 28 C4 18, 8 4, 24 12"
               stroke={`url(#t2-${uid})`}
               strokeWidth="2.6"
-              initial={{ pathLength: 1, opacity: 1 }}
-              animate={{ pathLength: [0.9, 1, 0.84, 1], opacity: [0.75, 1, 0.7, 1] }}
-              transition={{ duration: 7.1, delay: 0.1, repeat: Infinity, ease: "easeInOut" }}
             />
-            <motion.circle
-              cx="108"
-              cy="48"
-              r="2.2"
-              fill="#f5f5f2"
-              animate={{
-                cx: [108, 102, 110, 108],
-                cy: [48, 36, 52, 48],
-                opacity: [0.4, 1, 0.5, 1],
-              }}
-              transition={{ duration: 4.4, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.circle
-              cx="6"
-              cy="62"
-              r="1.6"
-              fill="#d4d4d0"
-              animate={{
-                cx: [6, 12, 4, 6],
-                cy: [62, 54, 70, 62],
-                opacity: [0.35, 1, 0.45, 1],
-              }}
-              transition={{ duration: 5.1, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.circle
-              cx="18"
-              cy="16"
-              r="1.3"
-              fill="#a78bfa"
-              animate={{ opacity: [0.15, 0.9, 0.2], scale: [0.7, 1.2, 0.7] }}
-              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-            />
-          </motion.g>
+            <circle cx="108" cy="48" r="2.4" fill="#fbbf24" />
+            <circle cx="6" cy="62" r="2.0" fill="#a78bfa" />
+            <circle cx="18" cy="16" r="1.8" fill="#38bdf8" />
+            <circle cx="92" cy="96" r="2.0" fill="#34d399" />
+          </g>
         ) : null}
 
         <g ref={faceRef} style={{ transformOrigin: "50px 50px" }}>

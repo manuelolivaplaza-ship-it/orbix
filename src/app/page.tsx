@@ -127,10 +127,11 @@ export default function LandingPage() {
               <Orb
                 size={66}
                 state="idle"
+                flourish
                 playful
                 hop
                 label="Orb"
-                className="origin-center scale-[0.85] translate-y-0.5 sm:scale-100 sm:translate-y-1 drop-shadow-sm"
+                className="origin-center scale-[0.85] translate-y-0.5 sm:scale-100 sm:translate-y-1 drop-shadow-sm cursor-pointer"
               />
               <span>Orbix</span>
             </h1>

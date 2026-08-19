@@ -157,23 +157,22 @@ export function breathScale(timeMs: number, amplitude = 0.012, periodMs = 3400):
 export type IdleAction = "hop" | "squish" | "wiggle" | "spin" | "stretch" | "look" | "smile";
 
 export function pickIdleAction(rand: number): IdleAction {
-  if (rand < 0.18) return "hop";
-  if (rand < 0.34) return "squish";
-  if (rand < 0.5) return "wiggle";
-  if (rand < 0.62) return "stretch";
-  if (rand < 0.74) return "smile";
-  if (rand < 0.84) return "spin";
-  return "look";
+  if (rand < 0.32) return "hop";
+  if (rand < 0.54) return "spin";
+  if (rand < 0.72) return "wiggle";
+  if (rand < 0.84) return "smile";
+  if (rand < 0.92) return "squish";
+  return "stretch";
 }
 
 export function actionDuration(kind: IdleAction): number {
-  if (kind === "hop") return 980;
-  if (kind === "squish") return 740;
-  if (kind === "wiggle") return 920;
-  if (kind === "spin") return 1140;
-  if (kind === "stretch") return 820;
-  if (kind === "smile") return 900;
-  return 1520;
+  if (kind === "hop") return 880;
+  if (kind === "squish") return 700;
+  if (kind === "wiggle") return 860;
+  if (kind === "spin") return 980;
+  if (kind === "stretch") return 760;
+  if (kind === "smile") return 850;
+  return 1200;
 }
 
 function easeOutCubic(t: number): number {
@@ -294,11 +293,11 @@ export function glanceFromSeed(seed: number, max = 4.2): Point {
 }
 
 export function hopPeakForState(state: OrbState): number {
-  if (state === "working") return 4;
-  if (state === "thinking") return 5;
-  if (state === "happy" || state === "success") return 10;
-  if (state === "error") return 3;
-  return 8;
+  if (state === "working") return 6;
+  if (state === "thinking") return 8;
+  if (state === "happy" || state === "success") return 18;
+  if (state === "error") return 4;
+  return 15;
 }
 
 export type BlinkKind = "single" | "double" | "slow" | "wink-left" | "wink-right";
