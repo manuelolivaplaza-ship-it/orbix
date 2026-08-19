@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -14,13 +14,8 @@ import {
   CheckCircle2,
   Plus,
   Check,
-  Search,
-  ArrowUpRight,
   TrendingUp,
   Sparkles,
-  Download,
-  Send,
-  Circle,
 } from "lucide-react";
 import { Orb } from "@/components/orb/Orb";
 import { cn } from "@/lib/cn";
@@ -621,11 +616,6 @@ function MiniChart() {
         stroke="var(--orbix-ink)"
         strokeWidth="1.8"
         strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-ound"
       />
     </svg>
   );
