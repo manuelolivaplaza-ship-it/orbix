@@ -8,7 +8,6 @@ import { ProductPreview } from "@/components/landing/ProductPreview";
 import { IntegrationsBar } from "@/components/landing/IntegrationsBar";
 import { BentoFeatures } from "@/components/landing/BentoFeatures";
 import { AiShowcase } from "@/components/landing/AiShowcase";
-import { ComparisonSection } from "@/components/landing/ComparisonSection";
 import { FaqSection } from "@/components/landing/FaqSection";
 import { LandingCurtain, Reveal, RevealLine, RevealOnScroll } from "@/components/landing/Reveal";
 import { Button } from "@/components/ui/button";
@@ -204,9 +203,6 @@ export default function LandingPage() {
       <div id="asistente">
         <AiShowcase />
       </div>
-
-      {/* Comparison: Old Way vs Orbix Way */}
-      <ComparisonSection />
 
       {/* Pricing Section */}
       <section id="precios" className="border-t border-line py-24">
