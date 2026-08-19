@@ -21,12 +21,13 @@ import {
   Paperclip,
   ArrowUp,
   RotateCcw,
-  Bot,
+  Wallet,
+  CircleUser,
 } from "lucide-react";
 import { Orb } from "@/components/orb/Orb";
 import { cn } from "@/lib/cn";
 
-type NavSection = "dashboard" | "facturacion" | "sueldos" | "caja";
+type NavSection = "dashboard" | "facturacion" | "cobranza" | "caja" | "sueldos";
 type AppMode = "platform" | "chat";
 
 interface Task {
@@ -47,17 +48,34 @@ interface ChatMsg {
   time: string;
 }
 
-const NAV_ITEMS = [
-  { id: "dashboard" as NavSection, label: "Dashboard", icon: LayoutDashboard, badge: "Hoy" },
-  { id: "facturacion" as NavSection, label: "Facturación", icon: FileText, badge: "3" },
-  { id: "sueldos" as NavSection, label: "Equipo & Nómina", icon: Users, badge: "6" },
-  { id: "caja" as NavSection, label: "Caja & Bancos", icon: Landmark, badge: "" },
-];
-
-const SECONDARY_NAV = [
-  { label: "Empresas", icon: Building2 },
-  { label: "Reportes", icon: BarChart3 },
-  { label: "Configuración", icon: Settings },
+const GROUPS = [
+  {
+    label: "Hoy",
+    items: [{ id: "dashboard" as NavSection, label: "Dashboard", icon: LayoutDashboard, badge: "" }],
+  },
+  {
+    label: "Comercial",
+    items: [
+      { id: "facturacion" as NavSection, label: "Facturación", icon: FileText, badge: "3" },
+      { id: "cobranza" as NavSection, label: "Cobranza", icon: Wallet, badge: "" },
+      { id: "caja" as NavSection, label: "Caja", icon: Landmark, badge: "" },
+    ],
+  },
+  {
+    label: "Personas",
+    items: [
+      { id: "sueldos" as NavSection, label: "Equipo", icon: Users, badge: "6" },
+      { id: "sueldos" as NavSection, label: "Cerrar mes", icon: Wallet, badge: "" },
+    ],
+  },
+  {
+    label: "Estudio",
+    items: [
+      { id: "dashboard" as NavSection, label: "Empresas", icon: Building2, badge: "" },
+      { id: "dashboard" as NavSection, label: "Reportes", icon: BarChart3, badge: "" },
+      { id: "dashboard" as NavSection, label: "Configuración", icon: Settings, badge: "" },
+    ],
+  },
 ];
 
 const INITIAL_TASKS: Task[] = [
@@ -107,22 +125,23 @@ export function ProductPreview({ className }: { className?: string }) {
   const [orbStatus, setOrbStatus] = useState<"idle" | "working" | "happy">("idle");
   const [chatInput, setChatInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const chatBottomRef = useRef<HTMLDivElement>(null);
+  const chatScrollerRef = useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] = useState<ChatMsg[]>([
     {
       id: "init",
       sender: "orb",
-      text: "¡Hola Camila! Soy Orb, tu asistente financiero en Andes SpA. ¿En qué te ayudo hoy con la facturación, sueldos o bancos?",
+      text: "¡Hola Camila! Soy Orb. Puedo facturar, leer un Excel, avisar cobranzas y mover la oficina.",
       time: "10:30",
     },
   ]);
 
+  // Scroll ONLY the internal container without shifting or scrolling the browser window
   useEffect(() => {
-    if (mode === "chat") {
-      chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatScrollerRef.current) {
+      chatScrollerRef.current.scrollTop = chatScrollerRef.current.scrollHeight;
     }
-  }, [messages, isTyping, mode]);
+  }, [messages, isTyping]);
 
   const toggleTask = (id: string) => {
     setTasks((prev) =>
@@ -224,7 +243,7 @@ export function ProductPreview({ className }: { className?: string }) {
               <span className="font-semibold text-ink">app.orbix.cl</span>
               <span className="text-faint">/</span>
               <span className="capitalize font-mono text-[11px] text-muted">
-                {mode === "chat" ? `chat-orb · ${activeTab}` : activeTab}
+                {mode === "chat" ? `chat-orb` : activeTab}
               </span>
             </div>
           </div>
@@ -257,7 +276,7 @@ export function ProductPreview({ className }: { className?: string }) {
                   {!collapsed && (
                     <div className="min-w-0 overflow-hidden">
                       <p className="truncate text-xs font-bold tracking-tight text-sidebar-foreground">Orbix</p>
-                      <p className="truncate text-[10px] text-muted-foreground font-medium">Andes SpA</p>
+                      <p className="truncate text-[10px] text-muted-foreground font-medium">Oficina financiera</p>
                     </div>
                   )}
                 </div>
@@ -285,42 +304,45 @@ export function ProductPreview({ className }: { className?: string }) {
                 </div>
               )}
 
-              {/* Mode Switch (Plataforma vs Orb Chat) */}
+              {/* Mode Switch (Dashboard vs Chat) */}
               {!collapsed ? (
                 <div className="p-2 border-b border-sidebar-border shrink-0">
                   <div className="grid grid-cols-2 p-0.5 rounded-md border border-sidebar-border bg-sidebar text-[10.5px] font-medium">
                     <button
+                      type="button"
                       onClick={() => setMode("platform")}
                       className={cn(
-                        "py-1 rounded-[5px] transition-all flex items-center justify-center gap-1 cursor-pointer",
+                        "py-1 rounded-[5px] transition-all flex items-center justify-center gap-1.5 cursor-pointer",
                         mode === "platform"
                           ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-2xs"
                           : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
                       )}
                     >
-                      <LayoutDashboard size={11} /> Plataforma
+                      <LayoutDashboard size={11} /> Dashboard
                     </button>
                     <button
+                      type="button"
                       onClick={() => setMode("chat")}
                       className={cn(
-                        "py-1 rounded-[5px] transition-all flex items-center justify-center gap-1 cursor-pointer",
+                        "py-1 rounded-[5px] transition-all flex items-center justify-center gap-1.5 cursor-pointer",
                         mode === "chat"
                           ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-2xs"
                           : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
                       )}
                     >
-                      <MessageSquare size={11} /> Orb AI
+                      <MessageSquare size={11} /> Chat
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className="p-1 border-b border-sidebar-border flex flex-col gap-1 items-center">
                   <button
+                    type="button"
                     onClick={() => {
                       setCollapsed(false);
                       setMode("platform");
                     }}
-                    title="Plataforma"
+                    title="Dashboard"
                     className={cn(
                       "size-7 rounded-md flex items-center justify-center transition-colors",
                       mode === "platform" ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
@@ -329,11 +351,12 @@ export function ProductPreview({ className }: { className?: string }) {
                     <LayoutDashboard size={13} />
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       setCollapsed(false);
                       setMode("chat");
                     }}
-                    title="Orb Chat"
+                    title="Chat"
                     className={cn(
                       "size-7 rounded-md flex items-center justify-center transition-colors",
                       mode === "chat" ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
@@ -352,9 +375,10 @@ export function ProductPreview({ className }: { className?: string }) {
                   <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-sidebar-border text-[10.5px]">
                     <span className="font-semibold text-sidebar-foreground flex items-center gap-1.5">
                       <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      Asistente Orb
+                      Orb
                     </span>
                     <button
+                      type="button"
                       onClick={() => {
                         setMessages([
                           {
@@ -365,15 +389,15 @@ export function ProductPreview({ className }: { className?: string }) {
                           },
                         ]);
                       }}
-                      className="text-muted-foreground hover:text-sidebar-foreground flex items-center gap-1 text-[10px]"
+                      className="text-muted-foreground hover:text-sidebar-foreground flex items-center gap-1 text-[10px] cursor-pointer"
                       title="Nueva conversación"
                     >
                       <RotateCcw size={10} /> Nueva
                     </button>
                   </div>
 
-                  {/* Conversation Messages Thread */}
-                  <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5 min-h-0 text-xs">
+                  {/* Conversation Messages Thread (Scoped Scrollable div, NEVER scrolls the page) */}
+                  <div ref={chatScrollerRef} className="flex-1 overflow-y-auto p-2.5 space-y-2.5 min-h-0 text-xs">
                     {messages.map((msg) => (
                       <div
                         key={msg.id}
@@ -409,10 +433,9 @@ export function ProductPreview({ className }: { className?: string }) {
                     {isTyping && (
                       <div className="flex items-center gap-1.5 text-[10.5px] text-muted-foreground py-1">
                         <Orb size={14} state="working" trackPointer={false} />
-                        <span className="animate-pulse">Orb está calculando...</span>
+                        <span className="animate-pulse">Orb está calculando…</span>
                       </div>
                     )}
-                    <div ref={chatBottomRef} />
                   </div>
 
                   {/* Quick Prompts & Mini Input inside Sidebar */}
@@ -421,6 +444,7 @@ export function ProductPreview({ className }: { className?: string }) {
                       {CHAT_PROMPTS.map((p) => (
                         <button
                           key={p.q}
+                          type="button"
                           onClick={() => handleSendPrompt(p)}
                           className="shrink-0 px-2 py-0.5 rounded-full border border-sidebar-border bg-sidebar-accent/50 hover:bg-sidebar-accent text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors cursor-pointer"
                         >
@@ -435,7 +459,7 @@ export function ProductPreview({ className }: { className?: string }) {
                           type="text"
                           value={chatInput}
                           onChange={(e) => setChatInput(e.target.value)}
-                          placeholder="Escribe a Orb..."
+                          placeholder="Escribe a Orb…"
                           className="w-full h-7 pl-2.5 pr-6 rounded-lg border border-sidebar-border bg-sidebar text-[11px] text-sidebar-foreground placeholder:text-muted-foreground focus:outline-none focus:border-sidebar-ring"
                         />
                         <Paperclip size={11} className="absolute right-2 text-muted-foreground pointer-events-none" />
@@ -464,72 +488,51 @@ export function ProductPreview({ className }: { className?: string }) {
                       </div>
                     )}
 
-                    {/* Navigation Items */}
-                    <div className="p-1.5 space-y-0.5 overflow-y-auto">
-                      {!collapsed && (
-                        <p className="px-2 pt-1.5 pb-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                          Comercial & Nómina
-                        </p>
-                      )}
-                      {NAV_ITEMS.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = activeTab === item.id;
-                        return (
-                          <button
-                            key={item.id}
-                            onClick={() => setActiveTab(item.id)}
-                            title={collapsed ? item.label : undefined}
-                            className={cn(
-                              "h-8.5 w-full flex items-center rounded-lg text-xs font-medium transition-colors cursor-pointer",
-                              collapsed ? "justify-center px-0" : "px-1.5 gap-2",
-                              isActive
-                                ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-2xs"
-                                : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                            )}
-                          >
-                            <div className="size-7 flex items-center justify-center shrink-0">
-                              <Icon size={15} />
-                            </div>
-                            {!collapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
-                            {!collapsed && item.badge && (
-                              <span
+                    {/* Navigation Groups matching real Sidebar.tsx */}
+                    <div className="p-1.5 space-y-1.5 overflow-y-auto">
+                      {GROUPS.map((group) => (
+                        <div key={group.label} className="space-y-0.5">
+                          {!collapsed && (
+                            <p className="px-2 pt-1 pb-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                              {group.label}
+                            </p>
+                          )}
+                          {group.items.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = activeTab === item.id;
+                            return (
+                              <button
+                                key={item.label}
+                                type="button"
+                                onClick={() => setActiveTab(item.id)}
+                                title={collapsed ? item.label : undefined}
                                 className={cn(
-                                  "px-1.5 py-0.2 rounded-full text-[9px] font-semibold",
-                                  isActive ? "bg-foreground/10 text-foreground" : "bg-sidebar-accent text-muted-foreground"
+                                  "h-8 w-full flex items-center rounded-lg text-xs font-medium transition-colors cursor-pointer",
+                                  collapsed ? "justify-center px-0" : "px-1.5 gap-2",
+                                  isActive
+                                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-2xs"
+                                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                                 )}
                               >
-                                {item.badge}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-
-                      <div className="border-t border-sidebar-border my-1.5" />
-
-                      {!collapsed && (
-                        <p className="px-2 pt-1 pb-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                          Estudio & Ajustes
-                        </p>
-                      )}
-                      {SECONDARY_NAV.map((item) => {
-                        const Icon = item.icon;
-                        return (
-                          <div
-                            key={item.label}
-                            title={collapsed ? item.label : undefined}
-                            className={cn(
-                              "h-8 w-full flex items-center rounded-lg text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/40 transition-colors cursor-pointer",
-                              collapsed ? "justify-center px-0" : "px-1.5 gap-2"
-                            )}
-                          >
-                            <div className="size-7 flex items-center justify-center shrink-0">
-                              <Icon size={14} />
-                            </div>
-                            {!collapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
-                          </div>
-                        );
-                      })}
+                                <div className="size-6 flex items-center justify-center shrink-0">
+                                  <Icon size={14} />
+                                </div>
+                                {!collapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
+                                {!collapsed && item.badge && (
+                                  <span
+                                    className={cn(
+                                      "px-1.5 py-0.2 rounded-full text-[9px] font-semibold",
+                                      isActive ? "bg-foreground/10 text-foreground" : "bg-sidebar-accent text-muted-foreground"
+                                    )}
+                                  >
+                                    {item.badge}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ))}
                     </div>
                   </div>
 
@@ -541,7 +544,7 @@ export function ProductPreview({ className }: { className?: string }) {
                         collapsed ? "justify-center px-0" : "gap-2 px-1.5"
                       )}
                     >
-                      <div className="size-6.5 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-white font-bold flex items-center justify-center text-[10px] shadow-xs shrink-0">
+                      <div className="size-6 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-white font-bold flex items-center justify-center text-[10px] shadow-xs shrink-0">
                         CS
                       </div>
                       {!collapsed && (
@@ -557,7 +560,7 @@ export function ProductPreview({ className }: { className?: string }) {
             </div>
           </aside>
 
-          {/* MAIN PLATFORM WORKSPACE (Always visible and interactive side-by-side with sidebar) */}
+          {/* MAIN PLATFORM WORKSPACE */}
           <main className="flex flex-col justify-between p-3.5 sm:p-4.5 overflow-hidden bg-background min-h-0">
             {/* View Header */}
             <div className="flex items-center justify-between pb-2.5 border-b border-line gap-2 shrink-0">
@@ -565,6 +568,7 @@ export function ProductPreview({ className }: { className?: string }) {
                 <h4 className="text-sm font-bold tracking-tight text-ink flex items-center gap-2">
                   {activeTab === "dashboard" && "Dashboard General"}
                   {activeTab === "facturacion" && "Facturación Electrónica DTE"}
+                  {activeTab === "cobranza" && "Cobranza Activa"}
                   {activeTab === "sueldos" && "Nómina y Liquidaciones"}
                   {activeTab === "caja" && "Conciliación Bancaria"}
                 </h4>
@@ -576,6 +580,7 @@ export function ProductPreview({ className }: { className?: string }) {
               <div className="flex items-center gap-1.5">
                 {mode === "platform" ? (
                   <button
+                    type="button"
                     onClick={() => setMode("chat")}
                     className="h-6.5 px-2.5 rounded-lg border border-line bg-surface text-secondary hover:text-ink text-[10.5px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                   >
@@ -584,6 +589,7 @@ export function ProductPreview({ className }: { className?: string }) {
                   </button>
                 ) : (
                   <button
+                    type="button"
                     onClick={() => setMode("platform")}
                     className="h-6.5 px-2.5 rounded-lg border border-line bg-surface text-secondary hover:text-ink text-[10.5px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                   >
@@ -591,7 +597,10 @@ export function ProductPreview({ className }: { className?: string }) {
                     <span>Ver Menú</span>
                   </button>
                 )}
-                <button className="h-6.5 px-2.5 rounded-lg bg-foreground text-background text-[11px] font-semibold flex items-center gap-1 hover:opacity-90 transition-all shadow-xs cursor-pointer">
+                <button
+                  type="button"
+                  className="h-6.5 px-2.5 rounded-lg bg-foreground text-background text-[11px] font-semibold flex items-center gap-1 hover:opacity-90 transition-all shadow-xs cursor-pointer"
+                >
                   <Plus size={12} />
                   <span className="hidden sm:inline">Nuevo</span>
                 </button>
@@ -669,7 +678,7 @@ export function ProductPreview({ className }: { className?: string }) {
                 )}
 
                 {/* TAB 2: FACTURACION */}
-                {activeTab === "facturacion" && (
+                {(activeTab === "facturacion" || activeTab === "cobranza") && (
                   <motion.div
                     key="fact"
                     initial={{ opacity: 0, y: 4 }}
@@ -682,6 +691,7 @@ export function ProductPreview({ className }: { className?: string }) {
                       {(["todas", "pendientes", "pagadas"] as const).map((f) => (
                         <button
                           key={f}
+                          type="button"
                           onClick={() => setFactFilter(f)}
                           className={cn(
                             "px-2 py-0.5 rounded-md capitalize font-semibold transition-colors cursor-pointer",
@@ -820,27 +830,6 @@ export function ProductPreview({ className }: { className?: string }) {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-
-            {/* Bottom Status Bar */}
-            <div className="pt-2 border-t border-line shrink-0">
-              <div
-                onClick={() => setMode("chat")}
-                className="flex items-center justify-between gap-2 p-1.5 rounded-xl bg-surface border border-line hover:border-foreground/20 text-xs shadow-xs cursor-pointer transition-all"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <Orb size={20} state={orbStatus} playful trackPointer={false} className="shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-bold text-[9px] uppercase text-muted leading-tight">Orb Asistente Inteligente</p>
-                    <p className="truncate text-[10.5px] font-medium text-ink leading-tight">
-                      {mode === "chat" ? "Conversación activa en la barra lateral..." : "Haz clic para abrir el chat de Orb en la barra lateral..."}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-foreground text-background shrink-0 flex items-center gap-1">
-                  <MessageSquare size={10} /> {mode === "chat" ? "Abierto" : "Abrir Chat"}
-                </span>
-              </div>
             </div>
           </main>
         </div>
