@@ -32,6 +32,7 @@ import {
 } from "@/lib/invoice";
 import { formatDate } from "@/lib/format";
 import { documentKindLabel, invoiceLabel, invoiceTone } from "@/lib/status";
+import { SiiBadge } from "@/components/sii/SiiBadge";
 
 type KindFilter = "todas" | DocumentKind;
 type View = "todas" | "pipeline" | "vencidas" | "recurrentes";
@@ -80,7 +81,7 @@ export default function FacturacionPage() {
       <PageHeader
         kicker="Comercial"
         title="Facturas"
-        description="Cotiza, emite, cobra. El ciclo completo en una tabla."
+        description="Cotiza, emite DTE al SII y cobra. El folio fiscal vive en cada documento."
         actions={
           <>
             <Link href="/facturacion/clientes">
@@ -163,6 +164,7 @@ export default function FacturacionPage() {
                 <TableHead>Tipo</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Estado</TableHead>
+                <TableHead>SII</TableHead>
                 <TableHead>Emisión</TableHead>
                 <TableHead>Vence</TableHead>
                 <TableHead className="text-right">Total</TableHead>
@@ -183,6 +185,9 @@ export default function FacturacionPage() {
                   <TableCell className="text-secondary">{invoice.clientName}</TableCell>
                   <TableCell>
                     <Badge tone={invoiceTone(invoice.status)}>{invoiceLabel(invoice.status)}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <SiiBadge invoice={invoice} />
                   </TableCell>
                   <TableCell className="text-secondary">{formatDate(invoice.issueDate)}</TableCell>
                   <TableCell className="text-secondary">{formatDate(invoice.dueDate)}</TableCell>

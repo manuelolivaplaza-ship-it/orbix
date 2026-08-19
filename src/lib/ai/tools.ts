@@ -97,6 +97,14 @@ export function createOrbTools(workspace: OrbWorkspace) {
       }),
       execute: async (input) => workspace.createDocument(input),
     }),
+    emitDocument: tool({
+      description:
+        "Timbra y envía un DTE al SII (sandbox Orbix o OpenFactura). No sirve para cotizaciones. Usa el folio o id del documento.",
+      inputSchema: z.object({
+        idOrNumber: z.string().describe("Folio interno (F-0001) o id del documento"),
+      }),
+      execute: async ({ idOrNumber }) => workspace.emitDocument(idOrNumber),
+    }),
     setDocumentStatus: tool({
       description: "Cambia el estado de un documento (borrador, enviada, pagada, vencida).",
       inputSchema: z.object({

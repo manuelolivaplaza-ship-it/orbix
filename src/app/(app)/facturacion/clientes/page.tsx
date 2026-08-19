@@ -12,6 +12,7 @@ import { PageSkeleton } from "@/components/ui/skeleton";
 import { useBoot } from "@/hooks/useBoot";
 import { useCompanyData, useStore } from "@/lib/store";
 import type { Client } from "@/lib/types";
+import { formatRut, isValidRut } from "@/lib/rut";
 
 const EMPTY: Omit<Client, "id" | "companyId"> = {
   name: "",
@@ -21,6 +22,7 @@ const EMPTY: Omit<Client, "id" | "companyId"> = {
   phone: "",
   address: "",
   city: "",
+  comuna: "",
 };
 
 export default function ClientesPage() {
@@ -49,6 +51,7 @@ export default function ClientesPage() {
       phone: client.phone,
       address: client.address,
       city: client.city,
+      comuna: client.comuna ?? client.city,
     });
     setError("");
     setOpen(true);
@@ -61,7 +64,17 @@ export default function ClientesPage() {
       setError("Nombre y RUT son obligatorios.");
       return;
     }
-    saveClient({ ...form, id: editId, companyId: company.id });
+    if (!isValidRut(form.rut)) {
+      setError("El RUT no es válido (dígito verificador, módulo 11).");
+      return;
+    }
+    saveClient({
+      ...form,
+      rut: formatRut(form.rut),
+      comuna: form.comuna || form.city,
+      id: editId,
+      companyId: company.id,
+    });
     setOpen(false);
   }
 
@@ -122,8 +135,11 @@ export default function ClientesPage() {
               <Input value={form.rut} onChange={(e) => setForm({ ...form, rut: e.target.value })} />
             </div>
             <div>
-              <Label>Ciudad</Label>
-              <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+              <Label>Comuna</Label>
+              <Input
+                value={form.comuna ?? form.city}
+                onChange={(e) => setForm({ ...form, comuna: e.target.value, city: e.target.value })}
+              />
             </div>
           </div>
           <div>

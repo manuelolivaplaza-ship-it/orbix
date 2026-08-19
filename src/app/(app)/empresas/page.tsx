@@ -122,12 +122,30 @@ export default function EmpresasPage() {
             <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
           </div>
           <div>
-            <Label>Ciudad</Label>
-            <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+            <Label>Comuna</Label>
+            <Input
+              value={form.comuna ?? form.city}
+              onChange={(e) => setForm({ ...form, comuna: e.target.value, city: e.target.value })}
+            />
           </div>
           <div>
             <Label>Región</Label>
             <Input value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })} />
+          </div>
+          <div>
+            <Label>Actividad económica</Label>
+            <Input
+              value={form.acteco ?? ""}
+              onChange={(e) => setForm({ ...form, acteco: e.target.value })}
+              placeholder="620200"
+            />
+          </div>
+          <div>
+            <Label>Resolución SII N°</Label>
+            <Input
+              value={form.siiResolutionNumber ?? ""}
+              onChange={(e) => setForm({ ...form, siiResolutionNumber: e.target.value })}
+            />
           </div>
           <div>
             <Label>Teléfono</Label>

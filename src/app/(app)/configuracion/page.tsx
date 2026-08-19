@@ -25,6 +25,8 @@ import { useBoot } from "@/hooks/useBoot";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import type { Role } from "@/lib/types";
+import { SiiPanel } from "@/components/sii/SiiPanel";
+import { isValidRut, formatRut } from "@/lib/rut";
 
 const TABS = [
   { id: "perfil", label: "Perfil", icon: UserRound },
@@ -50,7 +52,6 @@ export default function ConfiguracionPage() {
     updateUserRole,
     inviteUser,
     setNotificationPrefs,
-    toggleIntegration,
   } = useStore();
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("perfil");
   const [name, setName] = useState(session?.name ?? "");
@@ -270,13 +271,93 @@ export default function ConfiguracionPage() {
                 className="mt-6 grid gap-4 sm:grid-cols-2"
                 onSubmit={async (e) => {
                   e.preventDefault();
-                  const result = await persistCompany(company.id, {
+                  if (company.rut && !isValidRut(company.rut)) {
+                    setSaved("");
+                    return;
+                  }
+                  const patch = {
+                    name: company.name,
+                    rut: isValidRut(company.rut) ? formatRut(company.rut) : company.rut,
+                    giro: company.giro,
+                    address: company.address,
+                    city: company.city,
+                    comuna: company.comuna || company.city,
+                    region: company.region,
                     email: company.email,
                     phone: company.phone,
-                  });
+                    acteco: company.acteco,
+                    siiResolutionNumber: company.siiResolutionNumber,
+                    siiResolutionDate: company.siiResolutionDate,
+                    bank: company.bank,
+                    account: company.account,
+                  };
+                  updateCompany(company.id, patch);
+                  const result = await persistCompany(company.id, patch);
                   if (result.ok) setSaved("Empresa actualizada.");
                 }}
               >
+                <div>
+                  <Label>Razón social</Label>
+                  <Input
+                    value={company.name}
+                    onChange={(e) => updateCompany(company.id, { name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>RUT emisor</Label>
+                  <Input
+                    value={company.rut}
+                    onChange={(e) => updateCompany(company.id, { rut: e.target.value })}
+                  />
+                  {company.rut && !isValidRut(company.rut) ? (
+                    <p className="mt-1 text-[11px] text-red-400">RUT inválido (módulo 11).</p>
+                  ) : null}
+                </div>
+                <div className="sm:col-span-2">
+                  <Label>Giro</Label>
+                  <Input
+                    value={company.giro}
+                    onChange={(e) => updateCompany(company.id, { giro: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Dirección</Label>
+                  <Input
+                    value={company.address}
+                    onChange={(e) => updateCompany(company.id, { address: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Comuna</Label>
+                  <Input
+                    value={company.comuna ?? company.city}
+                    onChange={(e) => updateCompany(company.id, { comuna: e.target.value, city: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Actividad económica (Acteco)</Label>
+                  <Input
+                    value={company.acteco ?? ""}
+                    onChange={(e) => updateCompany(company.id, { acteco: e.target.value })}
+                    placeholder="620200"
+                  />
+                </div>
+                <div>
+                  <Label>Resolución SII N°</Label>
+                  <Input
+                    value={company.siiResolutionNumber ?? ""}
+                    onChange={(e) => updateCompany(company.id, { siiResolutionNumber: e.target.value })}
+                    placeholder="80"
+                  />
+                </div>
+                <div>
+                  <Label>Fecha resolución</Label>
+                  <Input
+                    type="date"
+                    value={company.siiResolutionDate ?? ""}
+                    onChange={(e) => updateCompany(company.id, { siiResolutionDate: e.target.value })}
+                  />
+                </div>
                 <div>
                   <Label>Email fiscal</Label>
                   <Input
@@ -290,14 +371,6 @@ export default function ConfiguracionPage() {
                     value={company.phone}
                     onChange={(e) => updateCompany(company.id, { phone: e.target.value })}
                   />
-                </div>
-                <div>
-                  <Label>Dirección</Label>
-                  <Input value={company.address} readOnly />
-                </div>
-                <div>
-                  <Label>Ciudad / región</Label>
-                  <Input value={`${company.city} · ${company.region}`} readOnly />
                 </div>
                 <div className="sm:col-span-2">
                   <Button type="submit">Guardar datos fiscales</Button>
@@ -440,27 +513,23 @@ export default function ConfiguracionPage() {
 
           {tab === "integraciones" ? (
             <div className="grid gap-4 md:grid-cols-2">
-              {state.integrations.map((item) => (
-                <Card key={item.id} className="p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-ink">{item.name}</p>
-                      <p className="mt-1 text-sm text-secondary">{item.description}</p>
+              <SiiPanel />
+              {state.integrations
+                .filter((item) => item.id !== "int-sii")
+                .map((item) => (
+                  <Card key={item.id} className="p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-ink">{item.name}</p>
+                        <p className="mt-1 text-sm text-secondary">{item.description}</p>
+                      </div>
+                      <Badge tone="muted">Próximamente</Badge>
                     </div>
-                    <Badge tone={item.connected ? "success" : "muted"}>
-                      {item.connected ? "Conectada" : "Disponible"}
-                    </Badge>
-                  </div>
-                  <Button
-                    className="mt-4"
-                    size="sm"
-                    variant={item.connected ? "secondary" : "primary"}
-                    onClick={() => toggleIntegration(item.id)}
-                  >
-                    {item.connected ? "Desconectar" : "Conectar"}
-                  </Button>
-                </Card>
-              ))}
+                    <p className="mt-4 text-xs text-muted-foreground">
+                      Esta conexión aún no emite ni concilia de verdad. El SII sí: usa el panel de arriba.
+                    </p>
+                  </Card>
+                ))}
             </div>
           ) : null}
         </div>

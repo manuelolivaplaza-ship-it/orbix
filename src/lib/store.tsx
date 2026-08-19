@@ -171,7 +171,7 @@ type StoreValue = {
   applyAgentMutations: (mutations: AgentMutation[]) => void;
   siiSettings: SiiSettings;
   saveSiiSettings: (patch: Partial<SiiSettings>, opts?: { silent?: boolean }) => void;
-  emitInvoice: (id: string) => Promise<Invoice | { error: string }>;
+  emitInvoice: (idOrInvoice: string | Invoice) => Promise<Invoice | { error: string }>;
   testSiiConnection: () => Promise<{ ok: true } | { error: string }>;
 };
 
@@ -502,6 +502,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       phone: input.phone,
       address: input.address,
       city: input.city,
+      comuna: input.comuna || input.city,
     };
     setState((prev) => {
       const exists = prev.clients.some((c) => c.id === saved.id);
@@ -881,8 +882,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [pushToast, state.activeCompanyId]);
 
   const emitInvoice = useCallback(
-    async (id: string) => {
-      const invoice = state.invoices.find((item) => item.id === id);
+    async (idOrInvoice: string | Invoice) => {
+      const invoice =
+        typeof idOrInvoice === "string"
+          ? state.invoices.find((item) => item.id === idOrInvoice)
+          : idOrInvoice;
       const company = selectActiveCompany(state.companies, state.activeCompanyId);
       const client = state.clients.find((item) => item.id === invoice?.clientId);
       if (!invoice || !company) return { error: "No se encontró el documento." };
@@ -916,21 +920,36 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const emitted = payload.invoice;
         setState((prev) => ({
           ...prev,
-          invoices: prev.invoices.map((item) =>
-            item.id === emitted.id
-              ? {
+          invoices: prev.invoices.some((item) => item.id === emitted.id)
+            ? prev.invoices.map((item) =>
+                item.id === emitted.id
+                  ? {
+                      ...emitted,
+                      events: [
+                        ...(item.events ?? emitted.events ?? []),
+                        event("sii_sent", `Track ${payload.trackId ?? emitted.siiTrackId}`),
+                        event(
+                          "sii_accepted",
+                          `${payload.provider === "openfactura" ? "OpenFactura" : "Sandbox Orbix"} · folio ${payload.folio ?? emitted.folio} · tipo ${payload.dteType ?? emitted.dteType}`,
+                        ),
+                      ],
+                    }
+                  : item,
+              )
+            : [
+                {
                   ...emitted,
                   events: [
-                    ...(item.events ?? []),
+                    ...(emitted.events ?? []),
                     event("sii_sent", `Track ${payload.trackId ?? emitted.siiTrackId}`),
                     event(
                       "sii_accepted",
                       `${payload.provider === "openfactura" ? "OpenFactura" : "Sandbox Orbix"} · folio ${payload.folio ?? emitted.folio} · tipo ${payload.dteType ?? emitted.dteType}`,
                     ),
                   ],
-                }
-              : item,
-          ),
+                },
+                ...prev.invoices,
+              ],
           siiByCompany: payload.settings
             ? {
                 ...prev.siiByCompany,

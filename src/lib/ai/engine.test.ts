@@ -8,7 +8,7 @@ import { mapInvoiceRows } from "./spreadsheet";
 const company = {
   id: "co-1",
   name: "Andes SpA",
-  rut: "76.543.210-K",
+  rut: "76.543.210-3",
   giro: "Software",
   address: "Apoquindo 1",
   city: "Santiago",
@@ -60,6 +60,31 @@ describe("OrbWorkspace", () => {
     expect(next.clients).toHaveLength(1);
     expect(next.invoices).toHaveLength(1);
     expect(next.invoices[0].number).toBe("F-0001");
+  });
+
+  it("emits a factura to the SII sandbox", async () => {
+    const ws = office();
+    ws.createClient({
+      name: "Mercado Norte SpA",
+      rut: "76.334.118-6",
+      giro: "Comercio",
+      address: "Independencia 1",
+      city: "Santiago",
+    });
+    const created = ws.createDocument({
+      clientName: "Mercado Norte SpA",
+      kind: "factura",
+      items: [{ description: "Licencia anual", quantity: 1, unitPrice: 1_000_000 }],
+    });
+    expect(created.ok).toBe(true);
+    if (!created.ok) return;
+    const invoiceMut = created.mutations?.find((item) => item.type === "upsertInvoice");
+    if (invoiceMut?.type !== "upsertInvoice") throw new Error("expected invoice");
+    const emitted = await ws.emitDocument(invoiceMut.invoice.number);
+    expect(emitted.ok).toBe(true);
+    if (!emitted.ok) return;
+    expect(emitted.summary).toContain("folio 1");
+    expect(emitted.summary).toContain("sandbox");
   });
 
   it("maps spreadsheet invoice rows", () => {

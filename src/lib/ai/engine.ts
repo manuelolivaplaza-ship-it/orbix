@@ -38,6 +38,8 @@ import {
   type ChatAttachment,
 } from "./spreadsheet";
 import type { CompactInvoice, WorkspaceSnapshot } from "./snapshot";
+import { defaultSiiSettings, emitDte, resolveDteType } from "@/lib/sii";
+import { formatRut, isValidRut } from "@/lib/rut";
 
 const KIND_ALIASES: Record<string, DocumentKind> = {
   factura: "factura",
@@ -117,6 +119,7 @@ export class OrbWorkspace {
       `Hoy: ${this.today}`,
       `Clientes: ${this.snapshot.clients.length} · Documentos: ${this.snapshot.invoices.length} · Equipo: ${this.snapshot.employees.length}`,
       `Cobranza vencida: ${overdue.length} avisos`,
+      `SII: ${this.snapshot.sii ? `${this.snapshot.sii.provider} · ${this.snapshot.sii.environment}${this.snapshot.sii.connected ? " · conectado" : ""}` : "sin configurar"}`,
       files.length ? `Adjuntos de este turno: ${files.join(" · ")}` : "Sin adjuntos en este turno.",
     ].join("\n");
   }
@@ -322,7 +325,7 @@ export class OrbWorkspace {
       id: uid("cli"),
       companyId: this.companyId(),
       name: input.name.trim(),
-      rut: input.rut?.trim() || "",
+      rut: input.rut && isValidRut(input.rut) ? formatRut(input.rut) : input.rut?.trim() || "",
       giro: input.giro?.trim() || "",
       email: input.email?.trim() || "",
       phone: input.phone?.trim() || "",
@@ -394,6 +397,9 @@ export class OrbWorkspace {
       taxRate,
       notes: input.notes ?? "",
       kind,
+      paymentMethod: "credito",
+      dteType: resolveDteType(kind, taxRate),
+      siiStatus: kind === "cotizacion" ? undefined : "pendiente",
       portalToken: uid("pt"),
       reminderCount: 0,
       sentAt: status !== "borrador" ? this.today : undefined,
@@ -417,6 +423,38 @@ export class OrbWorkspace {
       summary: `${labelKind(kind)} ${invoice.number} para ${client.name}: neto ${formatCLP(totals.neto)}, IVA ${formatCLP(totals.iva)}, total ${formatCLP(totals.total)} (${status}).`,
       href: documentHref(invoice),
       mutations,
+    };
+  }
+
+  async emitDocument(idOrNumber: string): Promise<ToolResult> {
+    const blocked = this.requireCompany();
+    if (blocked) return blocked;
+    const invoice = this.snapshot.invoices.find(
+      (item) => item.id === idOrNumber || item.number.toLowerCase() === idOrNumber.toLowerCase(),
+    ) as Invoice | undefined;
+    if (!invoice) return { ok: false, summary: `No encontré ${idOrNumber}.` };
+    const client = this.snapshot.clients.find((item) => item.id === invoice.clientId);
+    if (!client) return { ok: false, summary: "El documento no tiene receptor." };
+    const settings = this.snapshot.sii ?? defaultSiiSettings();
+    const result = await emitDte({
+      company: this.snapshot.company!,
+      client,
+      invoice,
+      settings,
+    });
+    if (!result.ok) return { ok: false, summary: result.message };
+    const next = result.invoice;
+    const index = this.snapshot.invoices.findIndex((item) => item.id === invoice.id);
+    if (index >= 0) this.snapshot.invoices[index] = next;
+    this.snapshot.sii = result.settings;
+    return {
+      ok: true,
+      summary: `DTE ${next.dteType} folio ${next.folio} aceptado (${result.provider}). Track ${result.trackId}.`,
+      href: documentHref(next),
+      mutations: [
+        { type: "upsertInvoice", invoice: next },
+        { type: "setSiiSettings", settings: { ...result.settings, apiKey: undefined } },
+      ],
     };
   }
 
@@ -734,6 +772,9 @@ export class OrbWorkspace {
       iva: formatCLP(totals.iva),
       total: formatCLP(totals.total),
       notes: invoice.notes,
+      dteType: "dteType" in invoice ? invoice.dteType : undefined,
+      folio: "folio" in invoice ? invoice.folio : undefined,
+      siiStatus: "siiStatus" in invoice ? invoice.siiStatus : undefined,
       href: documentHref(invoice),
       items: invoice.items.map((item) => ({
         description: item.description,

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Copy, CreditCard, Mail, Repeat, SplitSquareHorizontal } from "lucide-react";
+import { Copy, CreditCard, FileCheck, Mail, Repeat, SplitSquareHorizontal } from "lucide-react";
 import { InvoiceEditor } from "@/components/invoices/InvoiceEditor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,10 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { computeInvoiceTotals, documentKind } from "@/lib/invoice";
 import { formatDate, formatCLP } from "@/lib/format";
-import { documentKindLabel, eventLabel, invoiceLabel, invoiceTone } from "@/lib/status";
+import { documentKindLabel, eventLabel, invoiceLabel, invoiceTone, siiLabel, siiTone } from "@/lib/status";
 import { useStore } from "@/lib/store";
+import { isDteKind, isInvoiceLocked } from "@/lib/sii";
+import { Badge as SiiStatus } from "@/components/ui/badge";
 
 export default function DocumentoPage() {
   const params = useParams<{ id: string }>();
@@ -28,6 +30,7 @@ export default function DocumentoPage() {
     sendReminder,
     markInvoicePaid,
     toggleRecurring,
+    emitInvoice,
   } = useStore();
   const invoice = state.invoices.find((item) => item.id === params.id);
   const client = state.clients.find((c) => c.id === invoice?.clientId);
@@ -67,6 +70,9 @@ export default function DocumentoPage() {
         actions={
           <div className="flex flex-wrap gap-2">
             <Badge tone={invoiceTone(invoice.status)}>{invoiceLabel(invoice.status)}</Badge>
+            {isDteKind(kind) ? (
+              <SiiStatus tone={siiTone(invoice.siiStatus)}>{siiLabel(invoice.siiStatus)}</SiiStatus>
+            ) : null}
             {invoice.recurring?.active ? <Badge tone="info">Recurrente</Badge> : null}
             <Link href={`/facturacion/${invoice.id}/imprimir`}>
               <Button variant="secondary" size="sm">
@@ -151,6 +157,11 @@ export default function DocumentoPage() {
                       Convertir a factura
                     </Button>
                   ) : null}
+                  {isDteKind(kind) && !isInvoiceLocked(invoice) ? (
+                    <Button onClick={() => void emitInvoice(invoice.id)}>
+                      <FileCheck size={14} /> Emitir DTE al SII
+                    </Button>
+                  ) : null}
                   {invoice.status !== "pagada" && kind !== "cotizacion" ? (
                     <Button onClick={() => markInvoicePaid(invoice.id)}>
                       <CreditCard size={14} /> Marcar pagada
@@ -176,10 +187,33 @@ export default function DocumentoPage() {
                       Portal del cliente
                     </Button>
                   </Link>
+                  {invoice.siiXml ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const blob = new Blob([invoice.siiXml ?? ""], { type: "application/xml" });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement("a");
+                        link.href = url;
+                        link.download = `DTE-${invoice.dteType ?? 33}-${invoice.folio ?? invoice.number}.xml`;
+                        link.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                    >
+                      Descargar XML SII
+                    </Button>
+                  ) : null}
                 </div>
                 <p className="mt-3 text-[11px] text-muted-foreground">
                   {invoice.reminderCount ?? 0} recordatorios · token {invoice.portalToken}
                 </p>
+                {invoice.dteType ? (
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Tipo DTE {invoice.dteType}
+                    {invoice.folio != null ? ` · Folio SII ${invoice.folio}` : ""}
+                    {invoice.siiTrackId ? ` · ${invoice.siiTrackId}` : ""}
+                  </p>
+                ) : null}
               </Card>
 
               <Card className="p-5">

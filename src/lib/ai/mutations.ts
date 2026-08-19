@@ -1,5 +1,6 @@
 import { documentKind, type InvoiceStatus } from "@/lib/invoice";
 import { uid } from "./ids";
+import { defaultSiiSettings } from "@/lib/sii/dte";
 import type {
   Activity,
   AppState,
@@ -9,6 +10,7 @@ import type {
   Invoice,
   LiquidacionRecord,
   Notification,
+  SiiSettings,
   Vacation,
 } from "@/lib/types";
 
@@ -24,7 +26,8 @@ export type AgentMutation =
   | { type: "markPayablePaid"; id: string }
   | { type: "setAttendance"; row: Attendance }
   | { type: "upsertVacation"; vacation: Vacation }
-  | { type: "addActivity"; activity: Activity };
+  | { type: "addActivity"; activity: Activity }
+  | { type: "setSiiSettings"; settings: SiiSettings };
 
 export type ToolOk = {
   ok: true;
@@ -185,6 +188,24 @@ function applyOne(state: AppState, mutation: AgentMutation): AppState {
       return {
         ...state,
         activity: [mutation.activity, ...state.activity],
+      };
+    }
+    case "setSiiSettings": {
+      const companyId = state.activeCompanyId;
+      if (!companyId) return state;
+      const current = state.siiByCompany?.[companyId] ?? defaultSiiSettings();
+      const next = {
+        ...current,
+        ...mutation.settings,
+        apiKey: current.apiKey,
+        folios: mutation.settings.folios ?? current.folios,
+      };
+      return {
+        ...state,
+        siiByCompany: { ...(state.siiByCompany ?? {}), [companyId]: next },
+        integrations: (state.integrations ?? []).map((item) =>
+          item.id === "int-sii" ? { ...item, connected: Boolean(next.connected) } : item,
+        ),
       };
     }
     default:

@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 const SUGGESTIONS = [
   "¿Qué tengo vencido?",
-  "Crea una factura de prueba",
+  "Crea una factura y emítela al SII",
   "Avísame de la cobranza",
 ];
 

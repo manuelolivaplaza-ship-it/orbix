@@ -131,17 +131,12 @@ export async function ensureAndLoadWorkspace(
       "id, name, rut, giro, address, city, region, phone, email, iva_rate, logo_color, bank, account, comuna, acteco, sii_resolution_number, sii_resolution_date";
     const coreSelect =
       "id, name, rut, giro, address, city, region, phone, email, iva_rate, logo_color, bank, account";
-    let { data: companyRows, error: companyError } = await supabase
-      .from("companies")
-      .select(fullSelect)
-      .in("id", companyIds);
-    if (companyError) {
-      const fallback = await supabase.from("companies").select(coreSelect).in("id", companyIds);
-      if (fallback.error) throw new Error(fallback.error.message);
-      companyRows = fallback.data;
-      companyError = null;
-    }
-    companies = (companyRows ?? []).map((row) => mapCompany(row as CompanyRow));
+    const fullQuery = await supabase.from("companies").select(fullSelect).in("id", companyIds);
+    const companyRows = fullQuery.error
+      ? await supabase.from("companies").select(coreSelect).in("id", companyIds)
+      : fullQuery;
+    if (companyRows.error) throw new Error(companyRows.error.message);
+    companies = (companyRows.data ?? []).map((row) => mapCompany(row as CompanyRow));
   }
 
   const activeCompanyId =

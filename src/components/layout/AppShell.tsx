@@ -39,7 +39,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 }
 
 function AppShellInner({ children }: { children: React.ReactNode }) {
-  const { mode, setMode } = useChrome();
+  const { mode, chatWidth } = useChrome();
   const [open, setOpen] = useState(true);
 
   useEffect(() => {
@@ -50,12 +50,12 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     <SidebarProvider
       open={open}
       onOpenChange={(next) => {
-        if (mode === "chat" && !next) setMode("platform");
+        if (mode === "chat" && !next) return;
         setOpen(next);
       }}
       style={
         {
-          "--sidebar-width": mode === "chat" ? "22.5rem" : "13rem",
+          "--sidebar-width": mode === "chat" ? `${chatWidth}rem` : "13rem",
           "--sidebar-width-mobile": mode === "chat" ? "22rem" : "16rem",
         } as React.CSSProperties
       }
