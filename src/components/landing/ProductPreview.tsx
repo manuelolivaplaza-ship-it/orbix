@@ -20,7 +20,6 @@ import {
   MessageSquare,
   Paperclip,
   ArrowUp,
-  RotateCcw,
   Wallet,
   CircleUser,
 } from "lucide-react";
@@ -371,30 +370,6 @@ export function ProductPreview({ className }: { className?: string }) {
               {mode === "chat" && !collapsed ? (
                 /* LIVE ORB CHAT CONVERSATION INSIDE SIDEBAR */
                 <div className="flex flex-col flex-1 min-h-0 justify-between">
-                  {/* Chat Header inside Sidebar */}
-                  <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-sidebar-border text-[10.5px]">
-                    <span className="font-semibold text-sidebar-foreground flex items-center gap-1.5">
-                      <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      Orb
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMessages([
-                          {
-                            id: String(Date.now()),
-                            sender: "orb",
-                            text: "Conversación reiniciada. ¿Qué revisamos ahora?",
-                            time: "Ahora",
-                          },
-                        ]);
-                      }}
-                      className="text-muted-foreground hover:text-sidebar-foreground flex items-center gap-1 text-[10px] cursor-pointer"
-                      title="Nueva conversación"
-                    >
-                      <RotateCcw size={10} /> Nueva
-                    </button>
-                  </div>
 
                   {/* Conversation Messages Thread (Scoped Scrollable div, NEVER scrolls the page) */}
                   <div ref={chatScrollerRef} className="flex-1 overflow-y-auto p-2.5 space-y-2.5 min-h-0 text-xs">
