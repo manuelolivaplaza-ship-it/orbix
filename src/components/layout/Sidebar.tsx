@@ -24,6 +24,7 @@ import { Orb } from "@/components/orb/Orb";
 import { CommandPalette, useCommandPalette } from "@/components/app/CommandPalette";
 import dynamic from "next/dynamic";
 import { ModeSwitch } from "@/components/chat/ModeSwitch";
+import { useEffect, useRef } from "react";
 import { useChrome } from "./chrome";
 
 const OrbChat = dynamic(
@@ -125,10 +126,11 @@ function Brand() {
 export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { state, isMobile, toggleSidebar } = useSidebar();
+  const { state, isMobile, toggleSidebar, setOpen: setSidebarOpen } = useSidebar();
   const { mode } = useChrome();
   const collapsed = state === "collapsed" && !isMobile;
   const chat = mode === "chat" && !collapsed;
+  const peeked = useRef(false);
   const { open, setOpen } = useCommandPalette();
   const { resolvedTheme, setTheme } = useTheme();
   const { state: app, session, setActiveCompany, logout, markNotificationsRead } = useStore();
@@ -139,7 +141,21 @@ export function AppSidebar() {
   const menuSide = collapsed ? "right" : "top";
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar
+      collapsible="icon"
+      onMouseEnter={() => {
+        if (mode === "chat" || isMobile) return;
+        if (state === "collapsed") {
+          peeked.current = true;
+          setSidebarOpen(true);
+        }
+      }}
+      onMouseLeave={() => {
+        if (mode === "chat" || isMobile || !peeked.current) return;
+        peeked.current = false;
+        setSidebarOpen(false);
+      }}
+    >
       <CommandPalette open={open} onOpenChange={setOpen} />
 
       <SidebarHeader className="overflow-visible">
@@ -150,7 +166,7 @@ export function AppSidebar() {
           )}
         >
           <Brand />
-          {collapsed ? null : (
+          {collapsed || chat ? null : (
             <button
               type="button"
               onClick={toggleSidebar}
@@ -186,7 +202,7 @@ export function AppSidebar() {
         )}
       </SidebarHeader>
 
-      <SidebarContent className={chat ? "overflow-hidden p-0" : undefined}>
+      <SidebarContent className={chat ? "relative min-h-0 overflow-hidden p-0" : undefined}>
         {chat ? (
           <OrbChat />
         ) : GROUPS.map((group) => (
@@ -219,6 +235,7 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
 
+      {chat ? null : (
       <SidebarFooter className="gap-1 overflow-hidden p-1.5">
         <SidebarSeparator className="mx-0 mb-1" />
         <SidebarMenu>
@@ -340,8 +357,49 @@ export function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      <SidebarRail />
+      )}
+      {chat ? <ChatResizeHandle /> : <SidebarRail />}
     </Sidebar>
+  );
+}
+
+function ChatResizeHandle() {
+  const { setChatWidth } = useChrome();
+  const dragging = useRef(false);
+
+  useEffect(() => {
+    function onMove(event: MouseEvent) {
+      if (!dragging.current) return;
+      const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      setChatWidth(event.clientX / rem);
+    }
+    function onUp() {
+      if (!dragging.current) return;
+      dragging.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [setChatWidth]);
+
+  return (
+    <button
+      type="button"
+      aria-label="Ajustar ancho del chat"
+      title="Arrastra para ajustar"
+      onMouseDown={(event) => {
+        event.preventDefault();
+        dragging.current = true;
+        document.body.style.cursor = "ew-resize";
+        document.body.style.userSelect = "none";
+      }}
+      className="absolute inset-y-0 right-0 z-20 hidden w-2 cursor-ew-resize sm:flex"
+    />
   );
 }
 

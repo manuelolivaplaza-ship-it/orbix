@@ -148,27 +148,24 @@ export function OrbChat() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center justify-between px-2 py-1">
-        <p className="text-[11px] font-medium text-muted-foreground">Orb</p>
-        {messages.length ? (
-          <button
-            type="button"
-            onClick={() => {
-              setMessages([]);
-              appliedRef.current.clear();
-              saveMessages(userId, []);
-            }}
-            className="text-[11px] text-muted-foreground outline-none hover:text-foreground"
-          >
-            Nueva
-          </button>
-        ) : null}
-      </div>
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      {messages.length ? (
+        <button
+          type="button"
+          onClick={() => {
+            setMessages([]);
+            appliedRef.current.clear();
+            saveMessages(userId, []);
+          }}
+          className="absolute top-1.5 right-2 z-10 text-[11px] text-muted-foreground outline-none hover:text-foreground"
+        >
+          Nueva
+        </button>
+      ) : null}
 
-      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-2 pb-28">
         {messages.length === 0 ? (
-          <div className="flex h-full min-h-[12rem] flex-col items-center justify-center px-2 text-center">
+          <div className="flex min-h-[12rem] flex-col items-center px-2 pt-8 text-center">
             <Orb size={44} state={busy ? "thinking" : "idle"} playful />
             <p className="mt-3 text-sm font-medium">Hola, soy Orb.</p>
             <p className="mt-1 max-w-[16rem] text-[12px] leading-snug text-muted-foreground">
@@ -233,8 +230,9 @@ export function OrbChat() {
         )}
       </div>
 
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-sidebar from-40% via-sidebar/90 to-transparent px-2 pt-10 pb-2">
       {files.length ? (
-        <div className="flex flex-wrap gap-1 px-2 pb-1">
+        <div className="pointer-events-auto mb-1.5 flex flex-wrap gap-1">
           {files.map((file) => (
             <span
               key={`${file.name}-${file.size}`}
@@ -254,13 +252,13 @@ export function OrbChat() {
       ) : null}
 
       <form
-        className="border-t border-sidebar-border p-2"
+        className="pointer-events-auto"
         onSubmit={(event) => {
           event.preventDefault();
           void submit();
         }}
       >
-        <div className="flex items-end gap-1 rounded-md border border-sidebar-border bg-sidebar p-1">
+        <div className="flex items-end gap-1 rounded-md border border-sidebar-border bg-sidebar p-1 shadow-sm">
           <label className="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-[5px] text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground">
             <Paperclip className="size-3.5" />
             <input
@@ -310,6 +308,7 @@ export function OrbChat() {
           )}
         </div>
       </form>
+      </div>
     </div>
   );
 }

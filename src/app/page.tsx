@@ -7,7 +7,6 @@ import { Orb } from "@/components/orb/Orb";
 import { ProductPreview } from "@/components/landing/ProductPreview";
 import { IntegrationsBar } from "@/components/landing/IntegrationsBar";
 import { BentoFeatures } from "@/components/landing/BentoFeatures";
-import { InteractiveSimulator } from "@/components/landing/InteractiveSimulator";
 import { AiShowcase } from "@/components/landing/AiShowcase";
 import { ComparisonSection } from "@/components/landing/ComparisonSection";
 import { FaqSection } from "@/components/landing/FaqSection";
@@ -114,9 +113,6 @@ export default function LandingPage() {
             <a href="#producto" className="hover:text-ink transition-colors">
               Capacidades
             </a>
-            <a href="#simulador" className="hover:text-ink transition-colors">
-              Simulador
-            </a>
             <a href="#asistente" className="hover:text-ink transition-colors">
               Orb IA
             </a>
@@ -203,11 +199,6 @@ export default function LandingPage() {
 
       {/* Bento Grid Features */}
       <BentoFeatures />
-
-      {/* Interactive Chilean Salary & Invoice Simulator */}
-      <div id="simulador">
-        <InteractiveSimulator />
-      </div>
 
       {/* Dedicated AI Agent Showcase */}
       <div id="asistente">
@@ -359,10 +350,10 @@ export default function LandingPage() {
             </ul>
           </div>
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted mb-3">Herramientas</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted mb-3">Plataforma</p>
             <ul className="space-y-2 text-xs text-secondary">
-              <li><a href="#simulador" className="hover:text-ink transition-colors">Calculadora Sueldo Líquido</a></li>
-              <li><a href="#simulador" className="hover:text-ink transition-colors">Calculadora IVA (19%)</a></li>
+              <li><a href="#producto" className="hover:text-ink transition-colors">Ecosistema SII & Bancos</a></li>
+              <li><a href="#asistente" className="hover:text-ink transition-colors">Agente Orb IA</a></li>
               <li><a href="#precios" className="hover:text-ink transition-colors">Planes y Precios</a></li>
               <li><a href="#faq" className="hover:text-ink transition-colors">Preguntas Frecuentes</a></li>
             </ul>
