@@ -197,6 +197,128 @@ body {
   animation: float-soft 5s ease-in-out infinite;
 }
 
+/* Landing enter — CSS so the first paint always resolves (no stuck overlay). */
+@keyframes landing-veil {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes landing-header {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes landing-line {
+  from {
+    transform: translateY(108%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-orb {
+  from {
+    opacity: 0;
+    transform: scale(0.78);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes landing-scroll {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-veil {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: var(--orbix-bg);
+  animation: landing-veil 0.62s cubic-bezier(0.22, 1, 0.36, 1) 0.08s forwards;
+}
+
+.landing-header {
+  animation: landing-header 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+}
+
+.landing-rise {
+  animation: landing-rise 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.landing-line {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: baseline;
+}
+
+.landing-line > span {
+  display: inline-block;
+  animation: landing-line 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.landing-orb {
+  display: inline-flex;
+  animation: landing-orb 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.landing-scroll {
+  animation: landing-scroll 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@supports (animation-timeline: view()) {
+  .landing-scroll {
+    animation-timeline: view();
+    animation-range: entry 0% entry 42%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-veil,
+  .landing-header,
+  .landing-rise,
+  .landing-orb,
+  .landing-scroll,
+  .landing-line > span {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    visibility: visible !important;
+  }
+}
+
 .sidebar-icon svg {
   overflow: visible;
 }

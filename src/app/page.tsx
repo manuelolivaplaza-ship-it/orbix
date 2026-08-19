@@ -1,12 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { Orb } from "@/components/orb/Orb";
 import { ProductPreview } from "@/components/landing/ProductPreview";
-import { HeroAmbientGlow } from "@/components/landing/HeroAmbientGlow";
+import { LandingCurtain, Reveal, RevealLine, RevealOnScroll } from "@/components/landing/Reveal";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { cn } from "@/lib/utils";
 
 const FEATURES = [
   {
@@ -82,15 +84,34 @@ const QUOTES = [
 ];
 
 export default function LandingPage() {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 15);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <div className="min-h-screen bg-base text-ink">
-      <header className="sticky top-0 z-20 border-b border-line bg-base/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <Orb size={34} state="idle" playful className="transition-transform group-hover:scale-105" />
-            <span className="text-base font-semibold tracking-tight">Orbix</span>
+      <LandingCurtain />
+      <header
+        className={cn(
+          "landing-header sticky top-0 z-20 transition-all duration-300",
+          isScrolled
+            ? "border-b border-line bg-base/80 backdrop-blur-xl shadow-xs"
+            : "border-b border-transparent bg-transparent backdrop-blur-none"
+        )}
+      >
+        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-5 transition-all">
+          <Link href="/" className="flex items-center gap-3 group">
+            <Orb size={38} state="idle" playful className="transition-transform group-hover:scale-105" />
+            <span className="text-lg font-semibold tracking-tight">Orbix</span>
           </Link>
-          <nav className="hidden items-center gap-8 text-sm text-secondary md:flex">
+          <nav className="hidden items-center gap-8 text-[15px] font-medium text-secondary md:flex">
             <a href="#producto" className="hover:text-ink transition-colors">
               Producto
             </a>
@@ -101,13 +122,16 @@ export default function LandingPage() {
               Equipo
             </a>
           </nav>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <Link href="/login" className="hidden text-sm text-secondary hover:text-ink sm:block transition-colors">
+          <div className="flex items-center gap-3.5">
+            <ThemeToggle className="size-9 rounded-full" />
+            <Link
+              href="/login"
+              className="hidden text-[15px] font-medium text-secondary hover:text-ink sm:block transition-colors px-3.5 py-1.5 rounded-full hover:bg-foreground/[0.04]"
+            >
               Entrar
             </Link>
             <Link href="/register">
-              <Button size="sm" className="rounded-full">
+              <Button size="lg" className="rounded-full px-6 h-10 text-[15px] font-medium shadow-sm transition-transform active:scale-95">
                 Empezar
               </Button>
             </Link>
@@ -116,50 +140,60 @@ export default function LandingPage() {
       </header>
 
       <section className="relative overflow-hidden">
-        <HeroAmbientGlow />
         <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 sm:py-20 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-8 lg:py-24 xl:gap-12">
           <div className="min-w-0">
-            <p className="mb-6 text-xs font-medium uppercase tracking-[0.28em] text-muted">
-              Early beta
-            </p>
+            <Reveal delay={0.22}>
+              <p className="mb-6 text-xs font-medium uppercase tracking-[0.28em] text-muted">
+                Early beta
+              </p>
+            </Reveal>
             <h1 className="flex flex-nowrap items-center gap-x-2.5 whitespace-nowrap text-[1.65rem] font-semibold tracking-tight text-ink sm:gap-x-3.5 sm:text-4xl sm:leading-none lg:text-5xl">
-              <span className="whitespace-nowrap">Conoce a</span>
-              <Orb
-                size={66}
-                state="idle"
-                flourish
-                playful
-                hop
-                label="Orb"
-                className="origin-center scale-[0.85] translate-y-0.5 sm:scale-100 sm:translate-y-1 drop-shadow-sm cursor-pointer"
-              />
-              <span>Orbix</span>
+              <RevealLine delay={0.28} className="whitespace-nowrap">
+                Conoce a
+              </RevealLine>
+              <span className="landing-orb origin-center" style={{ animationDelay: "0.4s" }}>
+                <Orb
+                  size={66}
+                  state="idle"
+                  flourish
+                  playful
+                  hop
+                  intro
+                  label="Orb"
+                  className="origin-center scale-[0.85] translate-y-0.5 sm:scale-100 sm:translate-y-1 drop-shadow-sm cursor-pointer"
+                />
+              </span>
+              <RevealLine delay={0.36}>Orbix</RevealLine>
             </h1>
-            <p className="mt-8 max-w-xl text-lg leading-relaxed text-secondary">
-              Un compañero de trabajo al que le das operación real. Facturas, sueldos y
-              reportes — y vuelve cuando hay que firmar.
-            </p>
-            <div className="mt-10 flex flex-wrap gap-3">
-              <Link href="/register">
-                <Button size="lg" className="h-11 rounded-full px-6">
-                  Empezar
-                  <ArrowRight size={16} />
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button size="lg" variant="secondary" className="h-11 rounded-full px-6">
-                  Ver el producto
-                </Button>
-              </Link>
-            </div>
-            <p className="mt-5 text-xs text-faint">Crea tu cuenta. Sin usuarios de prueba.</p>
+            <Reveal delay={0.5}>
+              <p className="mt-8 max-w-xl text-lg leading-relaxed text-secondary">
+                Un compañero de trabajo al que le das operación real. Facturas, sueldos y
+                reportes — y vuelve cuando hay que firmar.
+              </p>
+            </Reveal>
+            <Reveal delay={0.6}>
+              <div className="mt-10 flex flex-wrap gap-3">
+                <Link href="/register">
+                  <Button size="lg" className="h-11 rounded-full px-6">
+                    Empezar
+                    <ArrowRight size={16} />
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button size="lg" variant="secondary" className="h-11 rounded-full px-6">
+                    Ver el producto
+                  </Button>
+                </Link>
+              </div>
+              <p className="mt-5 text-xs text-faint">Crea tu cuenta. Sin usuarios de prueba.</p>
+            </Reveal>
           </div>
           <ProductPreview />
         </div>
       </section>
 
       <section id="producto" className="border-t border-line py-24">
-        <div className="mx-auto max-w-6xl px-5">
+        <RevealOnScroll className="mx-auto max-w-6xl px-5">
           <p className="text-xs uppercase tracking-[0.28em] text-muted">Producto</p>
           <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-ink sm:text-5xl">
             Dale trabajo. Vuelve cuando esté listo.
@@ -182,11 +216,11 @@ export default function LandingPage() {
               </span>
             ))}
           </div>
-        </div>
+        </RevealOnScroll>
       </section>
 
       <section id="precios" className="border-t border-line py-24">
-        <div className="mx-auto max-w-6xl px-5">
+        <RevealOnScroll className="mx-auto max-w-6xl px-5">
           <p className="text-xs uppercase tracking-[0.28em] text-muted">Precios</p>
           <h2 className="mt-4 text-3xl font-semibold tracking-tight text-ink sm:text-5xl">
             Tres planes. Sin ruido.
@@ -223,11 +257,11 @@ export default function LandingPage() {
               </article>
             ))}
           </div>
-        </div>
+        </RevealOnScroll>
       </section>
 
       <section id="voces" className="border-t border-line py-24">
-        <div className="mx-auto max-w-6xl px-5">
+        <RevealOnScroll className="mx-auto max-w-6xl px-5">
           <p className="text-xs uppercase tracking-[0.28em] text-muted">En el equipo</p>
           <h2 className="mt-4 text-3xl font-semibold tracking-tight text-ink sm:text-5xl">
             Lo usa quien cierra el mes.
@@ -243,11 +277,11 @@ export default function LandingPage() {
               </blockquote>
             ))}
           </div>
-        </div>
+        </RevealOnScroll>
       </section>
 
       <section className="border-t border-line py-24">
-        <div className="mx-auto flex max-w-6xl flex-col items-start gap-8 px-5 sm:flex-row sm:items-center sm:justify-between">
+        <RevealOnScroll className="mx-auto flex max-w-6xl flex-col items-start gap-8 px-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
               Conoce a tu primer Orb
@@ -268,7 +302,7 @@ export default function LandingPage() {
               </Button>
             </Link>
           </div>
-        </div>
+        </RevealOnScroll>
       </section>
 
       <footer className="border-t border-line py-14">

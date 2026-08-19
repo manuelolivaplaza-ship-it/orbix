@@ -10,6 +10,8 @@ import {
   getOrbMorph,
   getOrbPalette,
   hopLookOffset,
+  flourishEnvelope,
+  flourishShouldShow,
   hopOffset,
   hopPeakForState,
   hopSquash,
@@ -114,7 +116,7 @@ describe("orb pointer and morph helpers", () => {
   });
 
   it("cycles through a mix of idle actions, not only hops", () => {
-    const kinds = [0.05, 0.25, 0.45, 0.58, 0.68, 0.8, 0.95].map(pickIdleAction);
+    const kinds = [0.05, 0.35, 0.5, 0.64, 0.75, 0.85, 0.95].map(pickIdleAction);
     expect(kinds).toContain("hop");
     expect(kinds).toContain("squish");
     expect(kinds).toContain("wiggle");
@@ -194,6 +196,22 @@ describe("orb pointer and morph helpers", () => {
   it("saccades only when the look jump is large", () => {
     expect(shouldSaccade({ x: 0, y: 0 }, { x: 0.4, y: 0.2 })).toBe(false);
     expect(shouldSaccade({ x: 0, y: 0 }, { x: 4, y: 1 })).toBe(true);
+  });
+
+  it("draws hop marks after the crouch and fades them on landing", () => {
+    const hidden = flourishEnvelope(0.08);
+    expect(hidden.opacity).toBe(0);
+    expect(hidden.draw).toBe(1);
+    const apex = flourishEnvelope(0.45);
+    expect(apex.draw).toBeLessThan(0.4);
+    expect(apex.opacity).toBeGreaterThan(0.6);
+    const land = flourishEnvelope(0.95);
+    expect(land.opacity).toBeLessThan(0.4);
+    expect(land.expand).toBeGreaterThan(apex.expand);
+    expect(flourishShouldShow("hop")).toBe(true);
+    expect(flourishShouldShow("spin")).toBe(true);
+    expect(flourishShouldShow("smile")).toBe(false);
+    expect(flourishShouldShow("wiggle")).toBe(false);
   });
 
   it("looks down on takeoff and up at the apex of a hop", () => {

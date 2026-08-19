@@ -157,11 +157,12 @@ export function breathScale(timeMs: number, amplitude = 0.012, periodMs = 3400):
 export type IdleAction = "hop" | "squish" | "wiggle" | "spin" | "stretch" | "look" | "smile";
 
 export function pickIdleAction(rand: number): IdleAction {
-  if (rand < 0.32) return "hop";
-  if (rand < 0.54) return "spin";
-  if (rand < 0.72) return "wiggle";
-  if (rand < 0.84) return "smile";
-  if (rand < 0.92) return "squish";
+  if (rand < 0.28) return "hop";
+  if (rand < 0.44) return "spin";
+  if (rand < 0.58) return "wiggle";
+  if (rand < 0.7) return "look";
+  if (rand < 0.8) return "smile";
+  if (rand < 0.9) return "squish";
   return "stretch";
 }
 
@@ -412,6 +413,33 @@ export function idleDrift(timeMs: number): Point {
     x: Math.sin((timeMs / 3100) * Math.PI * 2) * 0.38,
     y: Math.sin((timeMs / 4300) * Math.PI * 2 + 1.1) * 0.22,
   };
+}
+
+/**
+ * Grok Bot hop marks: strokes draw on at the apex, hold, then fade while drifting out.
+ * `draw` is SVG stroke-dashoffset with pathLength 1 (1 = hidden, 0 = fully drawn).
+ */
+export function flourishEnvelope(
+  progress: number,
+  delay = 0.17,
+): { draw: number; opacity: number; expand: number } {
+  const p = clamp01(progress);
+  if (p <= delay) return { draw: 1, opacity: 0, expand: 0.88 };
+  const local = (p - delay) / (1 - delay);
+  if (local < 0.32) {
+    const t = local / 0.32;
+    const k = t * t * (3 - 2 * t);
+    return { draw: 1 - k, opacity: Math.min(1, t * 1.35), expand: 0.88 + 0.12 * k };
+  }
+  if (local < 0.58) {
+    return { draw: 0, opacity: 1, expand: 1 };
+  }
+  const t = (local - 0.58) / 0.42;
+  return { draw: 0, opacity: 1 - t * t, expand: 1 + 0.16 * t };
+}
+
+export function flourishShouldShow(kind: IdleAction | null): boolean {
+  return kind === "hop" || kind === "spin";
 }
 
 export const ORB_STATES: OrbState[] = [

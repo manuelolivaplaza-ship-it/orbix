@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 import {
   actionDuration,
   blinkDuration,
@@ -12,6 +11,8 @@ import {
   getOrbMorph,
   getOrbPalette,
   hopLookOffset,
+  flourishEnvelope,
+  flourishShouldShow,
   hopOffset,
   hopPeakForState,
   hopSquash,
@@ -46,6 +47,7 @@ type OrbProps = {
   flourish?: boolean;
   playful?: boolean;
   hop?: boolean;
+  intro?: boolean;
   className?: string;
   label?: string;
 };
@@ -58,17 +60,11 @@ export function Orb({
   flourish = false,
   playful = false,
   hop = false,
+  intro = false,
   className,
   label = "Orb",
 }: OrbProps) {
-  const uid = useId().replace(/:/g, "");
   const rootRef = useRef<HTMLDivElement>(null);
-  const moverRef = useRef<SVGGElement>(null);
-  const faceRef = useRef<SVGGElement>(null);
-  const leftEyeRef = useRef<SVGRectElement>(null);
-  const rightEyeRef = useRef<SVGRectElement>(null);
-  const shadowRef = useRef<SVGEllipseElement>(null);
-  const flourishRef = useRef<SVGGElement>(null);
   const morph = getOrbMorph(state);
   const palette = getOrbPalette(tone ?? "paper");
   const bodyFill = tone ? palette.body : "var(--orb-body)";
@@ -77,16 +73,33 @@ export function Orb({
   const stateRef = useRef(state);
   const playfulRef = useRef(playful);
   const hopRef = useRef(hop);
+  const introRef = useRef(intro);
   const trackRef = useRef(trackPointer);
   morphRef.current = morph;
   stateRef.current = state;
   playfulRef.current = playful;
   hopRef.current = hop;
+  introRef.current = intro;
   trackRef.current = trackPointer;
 
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
+
+    let mover: SVGGElement | null = null;
+    let face: SVGGElement | null = null;
+    let leftEye: SVGRectElement | null = null;
+    let rightEye: SVGRectElement | null = null;
+    let shadow: SVGEllipseElement | null = null;
+    let flourish: SVGGElement | null = null;
+    const nodes = () => {
+      mover ??= root.querySelector("[data-orb=mover]");
+      face ??= root.querySelector("[data-orb=face]");
+      leftEye ??= root.querySelector("[data-orb=eye-left]");
+      rightEye ??= root.querySelector("[data-orb=eye-right]");
+      shadow ??= root.querySelector("[data-orb=shadow]");
+      flourish ??= root.querySelector("[data-orb=flourish]");
+    };
 
     let raf = 0;
     let lastNow = performance.now();
@@ -119,7 +132,10 @@ export function Orb({
     let action: IdleAction | null = null;
     let actionStart = 0;
     let actionDur = 0;
-    let nextAction = hopRef.current ? performance.now() + 1200 + Math.random() * 1600 : 1e12;
+    let didIntroHop = false;
+    let nextAction = hopRef.current
+      ? performance.now() + (introRef.current ? 720 : 1200) + Math.random() * (introRef.current ? 180 : 1600)
+      : 1e12;
     let glanceX = 0;
     let glanceY = 0;
     let glanceUntil = 0;
@@ -197,9 +213,16 @@ export function Orb({
       const playfulNow = playfulRef.current;
       const hopNow = hopRef.current;
       const tracking = trackRef.current || playfulNow;
+      nodes();
+
+      if (hopNow && nextAction > 1e11) {
+        nextAction = now + (introRef.current ? 720 : 1200);
+      }
 
       if (hopNow && !reduced && actionDur === 0 && now >= nextAction) {
-        startAction(now, pickIdleAction(Math.random()));
+        const forceIntroHop = introRef.current && !didIntroHop;
+        didIntroHop = true;
+        startAction(now, forceIntroHop ? "hop" : pickIdleAction(Math.random()));
       }
 
       let actionProgress = 0;
@@ -310,35 +333,50 @@ export function Orb({
       const sy = breath * squash.sy;
       const faceRot = tilt + wiggle + lean;
 
-      moverRef.current?.setAttribute(
+      mover?.setAttribute(
         "transform",
         `translate(50 ${50 + jump + bob}) rotate(${spin}) translate(-50 -50)`,
       );
-      faceRef.current?.setAttribute(
+      face?.setAttribute(
         "transform",
         `translate(50 50) rotate(${faceRot}) scale(${sx} ${sy})`,
       );
 
       const land = 1 - Math.min(1, Math.abs(jump) / 18);
-      if (shadowRef.current) {
-        shadowRef.current.setAttribute("rx", String(16 + 8 * land));
-        shadowRef.current.setAttribute("ry", String(2.2 * land + 0.6));
-        shadowRef.current.setAttribute("opacity", String(0.16 * land));
+      if (shadow) {
+        shadow.setAttribute("rx", String(16 + 8 * land));
+        shadow.setAttribute("ry", String(2.2 * land + 0.6));
+        shadow.setAttribute("opacity", String(0.16 * land));
       }
 
-      if (flourishRef.current) {
-        if (actionDur > 0 && kind) {
-          const p = actionProgress;
-          const fOpacity = Math.min(1, Math.sin(p * Math.PI) * 1.5);
-          const fScale = 0.72 + 0.48 * Math.sin(p * Math.PI);
-          const fRot = p * (kind === "spin" ? 360 : kind === "hop" ? 140 : 80);
-          flourishRef.current.style.opacity = String(fOpacity);
-          flourishRef.current.setAttribute(
-            "transform",
-            `translate(50 50) rotate(${fRot}) scale(${fScale}) translate(-50 -50)`,
-          );
+      if (flourish) {
+        const marks = actionDur > 0 && flourishShouldShow(kind);
+        if (!marks || reduced) {
+          flourish.style.opacity = "0";
         } else {
-          flourishRef.current.style.opacity = "0";
+          const delay0 = kind === "hop" ? 0.17 : 0.04;
+          const base = flourishEnvelope(actionProgress, delay0);
+          flourish.style.opacity = "1";
+          flourish.setAttribute(
+            "transform",
+            `translate(50 50) scale(${base.expand}) translate(-50 -50)`,
+          );
+          flourish.querySelectorAll<SVGPathElement>("[data-flourish=stroke]").forEach((node) => {
+            const i = Number(node.dataset.i ?? 0);
+            const env = flourishEnvelope(actionProgress, delay0 + i * 0.038);
+            node.style.opacity = String(env.opacity);
+            node.style.strokeDasharray = "1";
+            node.style.strokeDashoffset = String(env.draw);
+          });
+          flourish.querySelectorAll<SVGGElement>("[data-flourish=star]").forEach((node) => {
+            const i = Number(node.dataset.i ?? 0);
+            const cx = Number(node.dataset.cx ?? 0);
+            const cy = Number(node.dataset.cy ?? 0);
+            const env = flourishEnvelope(actionProgress, 0.26 + i * 0.055);
+            const s = 0.12 + 0.88 * env.opacity;
+            node.style.opacity = String(env.opacity);
+            node.setAttribute("transform", `translate(${cx} ${cy}) scale(${s})`);
+          });
         }
       }
 
@@ -350,8 +388,8 @@ export function Orb({
       const rightH = eyeH * lids.right * squint;
       const leftW = eyeW * (1 + (1 - lids.left) * 0.28);
       const rightW = eyeW * (1 + (1 - lids.right) * 0.28);
-      paintEye(leftEyeRef.current, -eyeGap + lookX, eyeY + lookY, leftW, leftH, rot);
-      paintEye(rightEyeRef.current, eyeGap + lookX, eyeY + lookY, rightW, rightH, rot);
+      paintEye(leftEye, -eyeGap + lookX, eyeY + lookY, leftW, leftH, rot);
+      paintEye(rightEye, eyeGap + lookX, eyeY + lookY, rightW, rightH, rot);
 
       raf = requestAnimationFrame(tick);
     };
@@ -375,90 +413,113 @@ export function Orb({
   }, [trackPointer]);
 
   return (
-    <motion.div
+    <div
       ref={rootRef}
       className={cn("relative inline-flex items-center justify-center select-none", className)}
       style={{ width: size, height: size }}
       aria-label={label}
       role="img"
     >
-      <motion.svg
-        viewBox={flourish ? "-22 -28 144 150" : playful ? "0 -8 100 116" : "0 0 100 100"}
-        width={flourish ? size * 1.32 : size}
-        height={flourish ? size * 1.32 : size}
+      <svg
+        viewBox={flourish ? "-30 -36 160 172" : playful ? "0 -8 100 116" : "0 0 100 100"}
+        width={flourish ? size * 1.38 : size}
+        height={flourish ? size * 1.38 : size}
         overflow="visible"
       >
-        <defs>
-          <linearGradient id={`t1-${uid}`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#f59e0b" />
-            <stop offset="50%" stopColor="#a78bfa" />
-            <stop offset="100%" stopColor="#34d399" />
-          </linearGradient>
-          <linearGradient id={`t2-${uid}`} x1="1" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#fb7185" />
-            <stop offset="50%" stopColor="#a78bfa" />
-            <stop offset="100%" stopColor="#38bdf8" />
-          </linearGradient>
-          <linearGradient id={`t3-${uid}`} x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0%" stopColor="#38bdf8" />
-            <stop offset="100%" stopColor="#84cc16" />
-          </linearGradient>
-        </defs>
-
         {playful && !flourish ? (
-          <ellipse ref={shadowRef} cx="50" cy="98" rx="22" ry="2.6" fill="#000" opacity="0.08" />
+          <ellipse data-orb="shadow" cx="50" cy="98" rx="22" ry="2.6" fill="#000" opacity="0.08" />
         ) : null}
 
-        <g ref={moverRef}>
+        <g data-orb="mover">
         {flourish ? (
           <g
-            ref={flourishRef}
+            data-orb="flourish"
             fill="none"
             strokeLinecap="round"
+            strokeLinejoin="round"
             style={{ transformOrigin: "50px 50px", opacity: 0 }}
           >
             <path
-              d="M62 8 C78 -6, 96 4, 90 22"
-              stroke={`url(#t1-${uid})`}
-              strokeWidth="3.4"
+              data-flourish="stroke"
+              data-i="0"
+              pathLength={1}
+              strokeDasharray="1"
+              strokeDashoffset="1"
+              d="M66 6 C78 -8, 102 0, 98 18 C94 30, 76 24, 82 12 C86 4, 98 10, 92 18"
+              stroke="#f59e0b"
+              strokeWidth="4.2"
             />
             <path
-              d="M86 28 C104 22, 112 44, 98 52"
-              stroke={`url(#t2-${uid})`}
-              strokeWidth="3.2"
+              data-flourish="stroke"
+              data-i="1"
+              pathLength={1}
+              strokeDasharray="1"
+              strokeDashoffset="1"
+              d="M92 30 C110 20, 122 42, 108 56 C98 66, 90 52, 98 44 C106 36, 114 44, 106 50"
+              stroke="#a78bfa"
+              strokeWidth="4"
             />
             <path
-              d="M78 78 C92 92, 74 108, 60 96"
-              stroke={`url(#t3-${uid})`}
-              strokeWidth="3.4"
+              data-flourish="stroke"
+              data-i="2"
+              pathLength={1}
+              strokeDasharray="1"
+              strokeDashoffset="1"
+              d="M78 76 C96 88, 92 110, 70 104 C58 100, 70 88, 82 90"
+              stroke="#38bdf8"
+              strokeWidth="3.8"
             />
             <path
-              d="M22 86 C8 98, 18 112, 34 102"
-              stroke={`url(#t1-${uid})`}
-              strokeWidth="2.8"
+              data-flourish="stroke"
+              data-i="3"
+              pathLength={1}
+              strokeDasharray="1"
+              strokeDashoffset="1"
+              d="M24 82 C6 94, 8 116, 30 108 C42 102, 28 92, 22 96"
+              stroke="#34d399"
+              strokeWidth="3.8"
             />
             <path
-              d="M18 28 C4 18, 8 4, 24 12"
-              stroke={`url(#t2-${uid})`}
-              strokeWidth="2.6"
+              data-flourish="stroke"
+              data-i="4"
+              pathLength={1}
+              strokeDasharray="1"
+              strokeDashoffset="1"
+              d="M20 24 C4 10, 6 -8, 26 4 C38 12, 18 16, 16 8"
+              stroke="#fb7185"
+              strokeWidth="3.6"
             />
-            <circle cx="108" cy="48" r="2.4" fill="#fbbf24" />
-            <circle cx="6" cy="62" r="2.0" fill="#a78bfa" />
-            <circle cx="18" cy="16" r="1.8" fill="#38bdf8" />
-            <circle cx="92" cy="96" r="2.0" fill="#34d399" />
+            <g data-flourish="star" data-i="0" data-cx="112" data-cy="18" opacity="0">
+              <path
+                fill="#fbbf24"
+                d="M0-5.4 1.5-.2 6.8 0 2.6 3.1 4 8 0 5.2-4 8-2.6 3.1-6.8 0-1.5-.2Z"
+              />
+            </g>
+            <g data-flourish="star" data-i="1" data-cx="6" data-cy="52" opacity="0">
+              <path
+                fill="#a78bfa"
+                d="M0-4.2 1.2-.1 5.2 0 2 2.4 3.1 6.2 0 4-3.1 6.2-2 2.4-5.2 0-1.2-.1Z"
+              />
+            </g>
+            <g data-flourish="star" data-i="2" data-cx="90" data-cy="102" opacity="0">
+              <path
+                fill="#34d399"
+                d="M0-3.6 1-.1 4.4 0 1.7 2 2.6 5.2 0 3.4-2.6 5.2-1.7 2-4.4 0-1-.1Z"
+              />
+            </g>
           </g>
         ) : null}
 
-        <g ref={faceRef} style={{ transformOrigin: "50px 50px" }}>
-          <motion.ellipse
+        <g data-orb="face" style={{ transformOrigin: "50px 50px" }} transform="translate(50 50)">
+          <ellipse
             cx="0"
             cy="0"
+            rx={morph.bodyRx}
+            ry={morph.bodyRy}
             fill={bodyFill}
-            animate={{ rx: morph.bodyRx, ry: morph.bodyRy }}
-            transition={{ type: "spring", stiffness: 170, damping: 18 }}
           />
           <rect
-            ref={leftEyeRef}
+            data-orb="eye-left"
             x="0"
             y="0"
             width={morph.eyeW}
@@ -467,7 +528,7 @@ export function Orb({
             fill={eyeFill}
           />
           <rect
-            ref={rightEyeRef}
+            data-orb="eye-right"
             x="0"
             y="0"
             width={morph.eyeW}
@@ -477,7 +538,7 @@ export function Orb({
           />
         </g>
         </g>
-      </motion.svg>
-    </motion.div>
+      </svg>
+    </div>
   );
 }
