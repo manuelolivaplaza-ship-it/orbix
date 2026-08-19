@@ -89,12 +89,30 @@ export async function ensureAndLoadWorkspace(
     );
   }
 
-  const { data: profile, error: profileError } = await supabase
+  const { data: profileData } = await supabase
     .from("profiles")
     .select("id, name, email, phone, title, avatar_color, active_company_id")
     .eq("id", user.id)
-    .single();
-  if (profileError) throw new Error(profileError.message);
+    .maybeSingle();
+
+  let profile = profileData as ProfileRow | null;
+  if (!profile) {
+    const defaultName =
+      (typeof user.user_metadata?.name === "string" ? user.user_metadata.name : "") ||
+      user.email?.split("@")[0] ||
+      "Usuario";
+    const defaultProfile = {
+      id: user.id,
+      name: defaultName,
+      email: user.email || "",
+      phone: null,
+      title: null,
+      avatar_color: "#171716",
+      active_company_id: null,
+    };
+    await supabase.from("profiles").upsert(defaultProfile);
+    profile = defaultProfile;
+  }
 
   const { data: memberships, error: memberError } = await supabase
     .from("company_members")
@@ -129,12 +147,22 @@ export async function ensureAndLoadWorkspace(
   if (activeCompanyId) {
     const { data: team, error: teamError } = await supabase
       .from("company_members")
-      .select("company_id, user_id, role, profiles ( id, name, email, phone, title, avatar_color, active_company_id )")
+      .select("company_id, user_id, role")
       .eq("company_id", activeCompanyId);
     if (teamError) throw new Error(teamError.message);
-    users = (team ?? []).map((row) => {
-      const member = row as MemberRow;
-      const p = oneProfile(member.profiles);
+
+    const userIds = (team ?? []).map((m) => m.user_id as string);
+    const profileMap = new Map<string, ProfileRow>();
+    if (userIds.length > 0) {
+      const { data: profileRows } = await supabase
+        .from("profiles")
+        .select("id, name, email, phone, title, avatar_color, active_company_id")
+        .in("id", userIds);
+      (profileRows ?? []).forEach((p) => profileMap.set(p.id, p as ProfileRow));
+    }
+
+    users = (team ?? []).map((member) => {
+      const p = profileMap.get(member.user_id);
       return {
         id: member.user_id,
         name: p?.name || p?.email || "Usuario",
