@@ -115,13 +115,7 @@ export function ProductPreview({ className }: { className?: string }) {
           </div>
 
           <div className="flex items-center gap-2 text-xs">
-            <div className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-line bg-foreground/[0.03] px-2.5 py-0.5 text-secondary text-[11px]">
-              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              SII Conectado
-            </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-0.5 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
-              ✨ Demo Interactiva
-            </span>
+            <span className="text-[11px] font-mono text-muted">Orbix OS v2.0</span>
           </div>
         </div>
 
