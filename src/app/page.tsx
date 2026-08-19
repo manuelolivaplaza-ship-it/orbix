@@ -30,35 +30,60 @@ const FEATURES = [
 ];
 
 const JOBS = [
-  "Facturación",
-  "Cobranza",
-  "Nómina",
-  "RRHH",
-  "Multi-empresa",
-  "Reportes",
-  "Roles",
-  "SII (mock)",
+  "Facturación electrónica",
+  "Cobranza activa",
+  "Nómina & Liquidaciones",
+  "Previred & Leyes sociales",
+  "Asistencia y Vacaciones",
+  "Conciliación bancaria",
+  "Caja y Flujo real",
+  "Reportes contables",
+  "Roles y Permisos",
+  "Asistente Orb IA",
 ];
 
 const PLANS = [
   {
     name: "Starter",
     price: "$29.990",
-    detail: "1 empresa · hasta 5 usuarios",
-    items: ["Facturación y clientes", "Dashboard de métricas", "Exportes básicos"],
+    detail: "1 empresa (1 RUT) · Comercial & Caja",
+    items: [
+      "Facturación electrónica y cotizaciones",
+      "Cobranza activa y recordatorios",
+      "Dashboard financiero en tiempo real",
+      "Control de caja y conciliación bancaria",
+      "Exportación a Excel y PDF oficial",
+      "Hasta 3 usuarios con roles",
+    ],
   },
   {
     name: "Pro",
     price: "$59.990",
-    detail: "3 empresas · usuarios ilimitados",
+    detail: "1 empresa (1 RUT) · Nómina & Operación Total",
     featured: true,
-    items: ["Nómina y liquidaciones", "Asistencia y vacaciones", "Reportes avanzados", "Roles granulares"],
+    badge: "Más popular",
+    items: [
+      "Todo lo del plan Starter",
+      "Nómina y liquidaciones (AFP, Isapre, Fonasa)",
+      "Control de asistencia, turnos y vacaciones",
+      "Contratos y finiquitos para imprimir",
+      "Asistente Orb IA para cierres y alertas",
+      "Roles dedicados (Admin, Contador, RRHH)",
+      "Usuarios y colaboradores ilimitados",
+    ],
   },
   {
     name: "Empresa",
     price: "$119.990",
-    detail: "Empresas ilimitadas · SLA",
-    items: ["Onboarding dedicado", "Integraciones SII / banco", "SSO y auditoría"],
+    detail: "1 empresa (1 RUT) · Alto Volumen & Automatización",
+    items: [
+      "Todo lo del plan Pro",
+      "Cierre mensual automatizado con libros",
+      "Integraciones bancarias y API personalizada",
+      "Onboarding dedicado y migración de datos",
+      "Reportería avanzada para directorio",
+      "Soporte prioritario por WhatsApp y SLA garantizado",
+    ],
   },
 ];
 
@@ -220,42 +245,60 @@ export default function LandingPage() {
       </section>
 
       <section id="precios" className="border-t border-line py-24">
-        <RevealOnScroll className="mx-auto max-w-6xl px-5">
+        <RevealOnScroll className="mx-auto max-w-7xl px-6 sm:px-8">
           <p className="text-xs uppercase tracking-[0.28em] text-muted">Precios</p>
           <h2 className="mt-4 text-3xl font-semibold tracking-tight text-ink sm:text-5xl">
-            Tres planes. Sin ruido.
+            Planes claros. 1 empresa por suscripción.
           </h2>
-          <div className="mt-14 grid gap-4 lg:grid-cols-3">
+          <p className="mt-3 text-secondary text-base max-w-2xl">
+            Cada plan incluye todo lo necesario para operar tu empresa. Si tienes más de un RUT, puedes abrir un workspace independiente para cada uno.
+          </p>
+
+          <div className="mt-14 grid gap-6 lg:grid-cols-3 items-stretch">
             {PLANS.map((plan) => (
               <article
                 key={plan.name}
                 className={
                   plan.featured
-                    ? "rounded-3xl border border-foreground/20 bg-foreground/[0.03] p-8"
-                    : "rounded-3xl border border-line p-8"
+                    ? "relative rounded-[28px] border-2 border-foreground/30 bg-foreground/[0.03] dark:bg-foreground/[0.05] p-8 sm:p-9 shadow-xl flex flex-col justify-between"
+                    : "relative rounded-[28px] border border-line bg-surface/40 p-8 sm:p-9 flex flex-col justify-between"
                 }
               >
-                <p className="text-sm text-secondary">{plan.name}</p>
-                <p className="mt-4 font-mono text-4xl text-ink">
-                  {plan.price}
-                  <span className="text-sm text-muted"> /mes</span>
-                </p>
-                <p className="mt-2 text-xs text-muted">{plan.detail}</p>
-                <ul className="mt-8 space-y-2.5 text-sm text-secondary">
-                  {plan.items.map((item) => (
-                    <li key={item} className="flex items-center gap-2">
-                      <Check size={14} className="text-ink" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/register" className="mt-10 block">
-                  <Button className="w-full" variant={plan.featured ? "primary" : "secondary"}>
-                    Elegir {plan.name}
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-base font-semibold text-ink">{plan.name}</p>
+                    {"badge" in plan && plan.badge ? (
+                      <span className="rounded-full bg-foreground text-background text-[11px] font-semibold px-3 py-0.5">
+                        {plan.badge}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-4 font-mono text-4xl font-semibold text-ink">
+                    {plan.price}
+                    <span className="text-sm font-normal text-muted"> + IVA /mes</span>
+                  </p>
+                  <p className="mt-2 text-xs font-medium text-secondary">{plan.detail}</p>
+                  <div className="border-t border-line my-6" />
+                  <ul className="space-y-3 text-sm text-secondary">
+                    {plan.items.map((item) => (
+                      <li key={item} className="flex items-start gap-2.5">
+                        <Check size={16} className="text-emerald-500 shrink-0 mt-0.5" />
+                        <span className="leading-snug">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <Link href="/register" className="mt-8 block">
+                  <Button className="w-full h-11 rounded-xl text-sm font-medium" variant={plan.featured ? "primary" : "secondary"}>
+                    Empezar con {plan.name}
                   </Button>
                 </Link>
               </article>
             ))}
+          </div>
+
+          <div className="mt-10 rounded-2xl border border-line bg-foreground/[0.02] p-5 text-center text-xs text-muted max-w-3xl mx-auto">
+            💡 <strong>¿Tienes múltiples empresas o un estudio contable?</strong> Cada empresa opera con su propio RUT, base de datos y facturación separada para mantener la contabilidad 100% ordenada y protegida.
           </div>
         </RevealOnScroll>
       </section>
