@@ -12,8 +12,10 @@ import type {
   LiquidacionRecord,
   Notification,
   Payable,
+  SiiSettings,
   Vacation,
 } from "@/lib/types";
+import { defaultSiiSettings } from "@/lib/sii/dte";
 
 export type CompactInvoice = Omit<Invoice, "events">;
 
@@ -31,6 +33,7 @@ export type WorkspaceSnapshot = {
   bankTxs: BankTx[];
   payables: Payable[];
   contracts: Contract[];
+  sii: SiiSettings | null;
 };
 
 const LIMIT = 300;
@@ -61,6 +64,7 @@ export function compactWorkspace(
     bankTxs: filterByCompany(state.bankTxs, companyId).slice(0, LIMIT),
     payables: filterByCompany(state.payables, companyId).slice(0, LIMIT),
     contracts: filterByCompany(state.contracts, companyId).slice(0, LIMIT),
+    sii: company ? state.siiByCompany?.[company.id] ?? defaultSiiSettings() : null,
   };
 }
 

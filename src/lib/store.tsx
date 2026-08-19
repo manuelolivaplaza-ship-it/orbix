@@ -35,6 +35,13 @@ import type {
   Vacation,
 } from "./types";
 import { applyMutations, type AgentMutation } from "./ai/mutations";
+import {
+  collectEmitIssues,
+  defaultSiiSettings,
+  isInvoiceLocked,
+  type SiiSettings,
+} from "./sii";
+import { formatRut, isValidRut } from "./rut";
 
 const OPS_KEY = (userId: string) => `orbix.v3.${userId}`;
 
@@ -58,6 +65,7 @@ type PersistedOps = Pick<
   | "payables"
   | "contracts"
   | "notificationPrefs"
+  | "siiByCompany"
 >;
 
 function loadOps(userId: string): Partial<PersistedOps> {
@@ -87,6 +95,16 @@ function dumpOps(state: AppState): PersistedOps {
     payables: state.payables,
     contracts: state.contracts,
     notificationPrefs: state.notificationPrefs,
+    siiByCompany: state.siiByCompany,
+  };
+}
+
+function companyExtras(company: Company) {
+  return {
+    comuna: company.comuna,
+    acteco: company.acteco,
+    siiResolutionNumber: company.siiResolutionNumber,
+    siiResolutionDate: company.siiResolutionDate,
   };
 }
 
@@ -151,6 +169,10 @@ type StoreValue = {
   matchBankTx: (txId: string, invoiceId: string | null) => void;
   markPayablePaid: (id: string) => void;
   applyAgentMutations: (mutations: AgentMutation[]) => void;
+  siiSettings: SiiSettings;
+  saveSiiSettings: (patch: Partial<SiiSettings>, opts?: { silent?: boolean }) => void;
+  emitInvoice: (id: string) => Promise<Invoice | { error: string }>;
+  testSiiConnection: () => Promise<{ ok: true } | { error: string }>;
 };
 
 const StoreContext = createContext<StoreValue | null>(null);
@@ -172,7 +194,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return;
     }
     const ops = loadOps(auth.session.userId);
-    const companies = auth.workspace?.companies ?? [];
+    const extras = (ops as PersistedOps & { companyExtras?: Record<string, Partial<Company>> }).companyExtras ?? {};
+    const companies = (auth.workspace?.companies ?? []).map((company) => ({
+      ...company,
+      ...extras[company.id],
+    }));
     const users = auth.workspace?.users ?? [];
     const activeCompanyId =
       auth.workspace?.activeCompanyId ||
@@ -191,6 +217,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       companies,
       users,
       activeCompanyId,
+      siiByCompany: ops.siiByCompany ?? {},
     });
     setBoundUserId(auth.session.userId);
     setHydrated(true);
@@ -200,17 +227,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!boundUserId || auth.session?.userId !== boundUserId) return;
-    setState((prev) => ({
-      ...prev,
-      session: auth.session,
-      companies: auth.workspace?.companies ?? prev.companies,
-      users: auth.workspace?.users ?? prev.users,
-    }));
+    setState((prev) => {
+      const extras = Object.fromEntries(prev.companies.map((item) => [item.id, companyExtras(item)]));
+      const companies = (auth.workspace?.companies ?? prev.companies).map((item) => ({
+        ...item,
+        ...extras[item.id],
+      }));
+      return {
+        ...prev,
+        session: auth.session,
+        companies,
+        users: auth.workspace?.users ?? prev.users,
+      };
+    });
   }, [boundUserId, auth.session, auth.workspace]);
 
   useEffect(() => {
     if (!hydrated || !state.session || state.session.userId !== boundUserId) return;
-    window.localStorage.setItem(OPS_KEY(state.session.userId), JSON.stringify(dumpOps(state)));
+    const extras = Object.fromEntries(state.companies.map((item) => [item.id, companyExtras(item)]));
+    window.localStorage.setItem(
+      OPS_KEY(state.session.userId),
+      JSON.stringify({ ...dumpOps(state), companyExtras: extras }),
+    );
   }, [state, hydrated, boundUserId]);
 
   const pushToast = useCallback((title: string, tone: Toast["tone"] = "info") => {
@@ -385,6 +423,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       viewedAt: input.viewedAt,
       recurring: input.recurring,
       events: input.events?.length ? input.events : [event("created", "Documento creado")],
+      dteType: input.dteType,
+      folio: input.folio,
+      paymentMethod: input.paymentMethod ?? "credito",
+      siiStatus: input.siiStatus,
+      siiTrackId: input.siiTrackId,
+      siiXml: input.siiXml,
+      siiError: input.siiError,
+      siiIssuedAt: input.siiIssuedAt,
     };
     setState((prev) => {
       const siblings = prev.invoices.filter((i) => i.companyId === saved.companyId);
@@ -417,9 +463,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [pushToast]);
 
   const deleteInvoice = useCallback((id: string) => {
+    const current = state.invoices.find((item) => item.id === id);
+    if (current && isInvoiceLocked(current)) {
+      pushToast("Un DTE timbrado no se borra. Emite una nota de crédito.", "error");
+      return;
+    }
     setState((prev) => ({ ...prev, invoices: prev.invoices.filter((i) => i.id !== id) }));
     pushToast("Factura eliminada", "info");
-  }, [pushToast]);
+  }, [pushToast, state.invoices]);
 
   const setInvoiceStatus = useCallback((id: string, status: InvoiceStatus) => {
     setState((prev) => ({
@@ -445,7 +496,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       id: input.id ?? uid("cli"),
       companyId: input.companyId,
       name: input.name,
-      rut: input.rut,
+      rut: isValidRut(input.rut) ? formatRut(input.rut) : input.rut.trim(),
       giro: input.giro,
       email: input.email,
       phone: input.phone,
@@ -808,7 +859,138 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setState((prev) => applyMutations(prev, mutations));
   }, []);
 
+  const saveSiiSettings = useCallback((patch: Partial<SiiSettings>, opts?: { silent?: boolean }) => {
+    const companyId = state.activeCompanyId;
+    if (!companyId) return;
+    setState((prev) => {
+      const current = prev.siiByCompany[companyId] ?? defaultSiiSettings();
+      const next: SiiSettings = {
+        ...current,
+        ...patch,
+        folios: patch.folios ?? current.folios,
+      };
+      return {
+        ...prev,
+        siiByCompany: { ...prev.siiByCompany, [companyId]: next },
+        integrations: prev.integrations.map((item) =>
+          item.id === "int-sii" ? { ...item, connected: Boolean(next.connected) } : item,
+        ),
+      };
+    });
+    if (!opts?.silent) pushToast("Configuración SII guardada", "success");
+  }, [pushToast, state.activeCompanyId]);
+
+  const emitInvoice = useCallback(
+    async (id: string) => {
+      const invoice = state.invoices.find((item) => item.id === id);
+      const company = selectActiveCompany(state.companies, state.activeCompanyId);
+      const client = state.clients.find((item) => item.id === invoice?.clientId);
+      if (!invoice || !company) return { error: "No se encontró el documento." };
+      const settings = state.siiByCompany[company.id] ?? defaultSiiSettings();
+      const issues = collectEmitIssues({ company, client, invoice, settings });
+      if (issues.length) {
+        pushToast(issues[0].message, "error");
+        return { error: issues[0].message };
+      }
+      try {
+        const response = await fetch("/api/sii/emit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ invoice, company, client, settings }),
+        });
+        const payload = (await response.json()) as {
+          error?: string;
+          issues?: { message: string }[];
+          invoice?: Invoice;
+          settings?: SiiSettings;
+          trackId?: string;
+          folio?: number;
+          dteType?: number;
+          provider?: string;
+        };
+        if (!response.ok || !payload.invoice) {
+          const message = payload.error || payload.issues?.[0]?.message || "No se pudo emitir el DTE.";
+          pushToast(message, "error");
+          return { error: message };
+        }
+        const emitted = payload.invoice;
+        setState((prev) => ({
+          ...prev,
+          invoices: prev.invoices.map((item) =>
+            item.id === emitted.id
+              ? {
+                  ...emitted,
+                  events: [
+                    ...(item.events ?? []),
+                    event("sii_sent", `Track ${payload.trackId ?? emitted.siiTrackId}`),
+                    event(
+                      "sii_accepted",
+                      `${payload.provider === "openfactura" ? "OpenFactura" : "Sandbox Orbix"} · folio ${payload.folio ?? emitted.folio} · tipo ${payload.dteType ?? emitted.dteType}`,
+                    ),
+                  ],
+                }
+              : item,
+          ),
+          siiByCompany: payload.settings
+            ? {
+                ...prev.siiByCompany,
+                [company.id]: {
+                  ...(prev.siiByCompany[company.id] ?? defaultSiiSettings()),
+                  ...payload.settings,
+                  apiKey: prev.siiByCompany[company.id]?.apiKey ?? payload.settings.apiKey,
+                },
+              }
+            : prev.siiByCompany,
+          integrations: prev.integrations.map((item) =>
+            item.id === "int-sii" ? { ...item, connected: true } : item,
+          ),
+        }));
+        pushToast(`DTE folio ${payload.folio ?? emitted.folio} aceptado`, "success");
+        return emitted;
+      } catch {
+        pushToast("No se pudo contactar el servicio de emisión.", "error");
+        return { error: "No se pudo contactar el servicio de emisión." };
+      }
+    },
+    [pushToast, state.activeCompanyId, state.clients, state.companies, state.invoices, state.siiByCompany],
+  );
+
+  const testSiiConnection = useCallback(async () => {
+    const companyId = state.activeCompanyId;
+    const settings = state.siiByCompany[companyId] ?? defaultSiiSettings();
+    if (settings.provider === "sandbox") {
+      saveSiiSettings(
+        { connected: true, lastError: undefined, lastTestAt: new Date().toISOString() },
+        { silent: true },
+      );
+      pushToast("Sandbox SII activo. Los DTE se validan y timbran en Orbix.", "success");
+      return { ok: true as const };
+    }
+    try {
+      const response = await fetch("/api/sii/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: settings.apiKey, environment: settings.environment }),
+      });
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        saveSiiSettings({ connected: false, lastError: payload.error }, { silent: true });
+        pushToast(payload.error ?? "Falló la prueba con OpenFactura.", "error");
+        return { error: payload.error ?? "Falló la prueba." };
+      }
+      saveSiiSettings(
+        { connected: true, lastError: undefined, lastTestAt: new Date().toISOString() },
+        { silent: true },
+      );
+      pushToast("OpenFactura conectado. Las emisiones irán al SII.", "success");
+      return { ok: true as const };
+    } catch {
+      return { error: "No se pudo contactar OpenFactura." };
+    }
+  }, [pushToast, saveSiiSettings, state.activeCompanyId, state.siiByCompany]);
+
   const company = selectActiveCompany(state.companies, state.activeCompanyId);
+  const siiSettings = company ? state.siiByCompany[company.id] ?? defaultSiiSettings() : defaultSiiSettings();
 
   const value = useMemo<StoreValue>(
     () => ({
@@ -855,6 +1037,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       matchBankTx,
       markPayablePaid,
       applyAgentMutations,
+      siiSettings,
+      saveSiiSettings,
+      emitInvoice,
+      testSiiConnection,
     }),
     [
       ready,
@@ -900,6 +1086,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       matchBankTx,
       markPayablePaid,
       applyAgentMutations,
+      siiSettings,
+      saveSiiSettings,
+      emitInvoice,
+      testSiiConnection,
     ],
   );
 

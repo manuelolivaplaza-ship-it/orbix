@@ -34,8 +34,30 @@ export function eventLabel(kind: string) {
     credited: "Nota de crédito",
     duplicated: "Duplicado",
     reconciled: "Conciliado",
+    sii_sent: "Enviado al SII",
+    sii_accepted: "Aceptado por el SII",
+    sii_rejected: "Rechazado por el SII",
   };
   return map[kind] ?? kind;
+}
+
+export function siiTone(status?: string) {
+  if (status === "aceptado") return "success" as const;
+  if (status === "enviado") return "info" as const;
+  if (status === "rechazado" || status === "anulado") return "danger" as const;
+  if (status === "pendiente") return "warning" as const;
+  return "muted" as const;
+}
+
+export function siiLabel(status?: string) {
+  const map: Record<string, string> = {
+    pendiente: "Pendiente SII",
+    enviado: "Enviado SII",
+    aceptado: "Aceptada SII",
+    rechazado: "Rechazada SII",
+    anulado: "Anulada",
+  };
+  return status ? map[status] ?? status : "Sin timbrar";
 }
 
 export function employeeTone(status: string) {

@@ -5,14 +5,7 @@ export function formatCLP(value: number): string {
   return `${sign}$${grouped}`;
 }
 
-export function formatRut(rut: string): string {
-  const cleaned = rut.replace(/[^0-9kK]/g, "").toUpperCase();
-  if (cleaned.length < 2) return rut;
-  const body = cleaned.slice(0, -1);
-  const dv = cleaned.slice(-1);
-  const grouped = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  return `${grouped}-${dv}`;
-}
+export { formatRut, isValidRut, compactRut, siiRut } from "./rut";
 
 export function formatDate(iso: string): string {
   const [y, m, d] = iso.split("-");

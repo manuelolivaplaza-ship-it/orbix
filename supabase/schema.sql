@@ -292,3 +292,8 @@ grant execute on function public.ensure_workspace(text) to authenticated;
 grant execute on function public.is_company_member(uuid) to authenticated;
 grant execute on function public.is_company_admin(uuid) to authenticated;
 grant execute on function public.shares_company_with(uuid) to authenticated;
+
+alter table public.companies add column if not exists comuna text not null default '';
+alter table public.companies add column if not exists acteco text not null default '';
+alter table public.companies add column if not exists sii_resolution_number text not null default '';
+alter table public.companies add column if not exists sii_resolution_date text not null default '';

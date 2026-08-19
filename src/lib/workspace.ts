@@ -25,6 +25,10 @@ export type CompanyRow = {
   logo_color: string;
   bank: string;
   account: string;
+  comuna?: string | null;
+  acteco?: string | null;
+  sii_resolution_number?: string | null;
+  sii_resolution_date?: string | null;
 };
 
 export type MemberRow = {
@@ -56,6 +60,10 @@ export function mapCompany(row: CompanyRow): Company {
     logoColor: row.logo_color ?? "#a3a3a3",
     bank: row.bank ?? "",
     account: row.account ?? "",
+    comuna: row.comuna ?? "",
+    acteco: row.acteco ?? "",
+    siiResolutionNumber: row.sii_resolution_number ?? "",
+    siiResolutionDate: row.sii_resolution_date ?? "",
   };
 }
 
@@ -119,13 +127,20 @@ export async function ensureAndLoadWorkspace(
   const companyIds = (memberships ?? []).map((row) => row.company_id as string);
   let companies: Company[] = [];
   if (companyIds.length) {
-    const { data: companyRows, error: companyError } = await supabase
+    const fullSelect =
+      "id, name, rut, giro, address, city, region, phone, email, iva_rate, logo_color, bank, account, comuna, acteco, sii_resolution_number, sii_resolution_date";
+    const coreSelect =
+      "id, name, rut, giro, address, city, region, phone, email, iva_rate, logo_color, bank, account";
+    let { data: companyRows, error: companyError } = await supabase
       .from("companies")
-      .select(
-        "id, name, rut, giro, address, city, region, phone, email, iva_rate, logo_color, bank, account",
-      )
+      .select(fullSelect)
       .in("id", companyIds);
-    if (companyError) throw new Error(companyError.message);
+    if (companyError) {
+      const fallback = await supabase.from("companies").select(coreSelect).in("id", companyIds);
+      if (fallback.error) throw new Error(fallback.error.message);
+      companyRows = fallback.data;
+      companyError = null;
+    }
     companies = (companyRows ?? []).map((row) => mapCompany(row as CompanyRow));
   }
 
@@ -199,5 +214,9 @@ export function companyToRow(patch: Partial<Company>) {
   if (patch.logoColor !== undefined) row.logo_color = patch.logoColor;
   if (patch.bank !== undefined) row.bank = patch.bank;
   if (patch.account !== undefined) row.account = patch.account;
+  if (patch.comuna !== undefined) row.comuna = patch.comuna;
+  if (patch.acteco !== undefined) row.acteco = patch.acteco;
+  if (patch.siiResolutionNumber !== undefined) row.sii_resolution_number = patch.siiResolutionNumber;
+  if (patch.siiResolutionDate !== undefined) row.sii_resolution_date = patch.siiResolutionDate;
   return row;
 }

@@ -1046,8 +1046,8 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "int-sii",
     name: "SII — Factura electrónica",
-    description: "Emisión y recepción de DTE.",
-    connected: true,
+    description: "Emisión de DTE: sandbox Orbix o OpenFactura (Haulmer) certificado.",
+    connected: false,
   },
   {
     id: "int-banco",
@@ -1093,6 +1093,7 @@ export function createEmptyState(input: {
     bankTxs: [],
     payables: [],
     contracts: [],
+    siiByCompany: {},
     notificationPrefs: {
       email: true,
       invoices: true,
@@ -1132,6 +1133,7 @@ export function createSeedState(): AppState {
     bankTxs: BANK_TXS.map((tx) => ({ ...tx })),
     payables: PAYABLES.map((p) => ({ ...p })),
     contracts: CONTRACTS.map((c) => ({ ...c })),
+    siiByCompany: {},
     notificationPrefs: {
       email: true,
       invoices: true,

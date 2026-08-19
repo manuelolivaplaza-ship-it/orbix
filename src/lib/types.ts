@@ -1,7 +1,8 @@
 import type { DocumentKind, InvoiceStatus } from "./invoice";
 import type { PayLine } from "./payroll";
+import type { DteType, PaymentMethod, SiiDocStatus, SiiSettings } from "./sii/dte";
 
-export type { DocumentKind };
+export type { DocumentKind, DteType, PaymentMethod, SiiDocStatus, SiiSettings };
 
 export type Company = {
   id: string;
@@ -17,6 +18,10 @@ export type Company = {
   logoColor: string;
   bank: string;
   account: string;
+  comuna?: string;
+  acteco?: string;
+  siiResolutionNumber?: string;
+  siiResolutionDate?: string;
 };
 
 export type Client = {
@@ -29,6 +34,7 @@ export type Client = {
   phone: string;
   address: string;
   city: string;
+  comuna?: string;
 };
 
 export type InvoiceItem = {
@@ -47,7 +53,10 @@ export type InvoiceEventKind =
   | "converted"
   | "credited"
   | "duplicated"
-  | "reconciled";
+  | "reconciled"
+  | "sii_sent"
+  | "sii_accepted"
+  | "sii_rejected";
 
 export type InvoiceEvent = {
   id: string;
@@ -83,6 +92,14 @@ export type Invoice = {
   viewedAt?: string;
   recurring?: RecurringConfig;
   events?: InvoiceEvent[];
+  dteType?: DteType | null;
+  folio?: number;
+  paymentMethod?: PaymentMethod;
+  siiStatus?: SiiDocStatus;
+  siiTrackId?: string;
+  siiXml?: string;
+  siiError?: string;
+  siiIssuedAt?: string;
 };
 
 export type BankTx = {
@@ -248,4 +265,5 @@ export type AppState = {
     payroll: boolean;
     product: boolean;
   };
+  siiByCompany: Record<string, SiiSettings>;
 };

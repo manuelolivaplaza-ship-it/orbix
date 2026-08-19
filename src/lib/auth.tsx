@@ -264,7 +264,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const persistCompany = useCallback<AuthValue["persistCompany"]>(async (id, patch) => {
     const supabase = tryCreateClient();
     if (!supabase) return { ok: false, error: translateAuthError("Supabase no está configurado") };
-    const { error } = await supabase.from("companies").update(companyToRow(patch)).eq("id", id);
+    const row = companyToRow(patch);
+    let { error } = await supabase.from("companies").update(row).eq("id", id);
+    if (error && (error.message.includes("column") || error.code === "PGRST204")) {
+      const core = { ...row };
+      delete core.comuna;
+      delete core.acteco;
+      delete core.sii_resolution_number;
+      delete core.sii_resolution_date;
+      const retry = await supabase.from("companies").update(core).eq("id", id);
+      error = retry.error;
+    }
     if (error) return { ok: false, error: translateAuthError(error.message) };
     setWorkspace((prev) =>
       prev
