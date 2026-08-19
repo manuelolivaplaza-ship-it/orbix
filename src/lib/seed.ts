@@ -923,8 +923,8 @@ export const VACATIONS: Vacation[] = [
 export const USERS: User[] = [
   {
     id: "usr-1",
-    name: "Manuela Vergara",
-    email: "manuela@andestec.cl",
+    name: "Catalina Reyes",
+    email: "catalina@andestec.cl",
     password: "orbix123",
     role: "admin",
     companyIds: ["co-andes", "co-puerto", "co-cordillera"],
@@ -1107,8 +1107,8 @@ export function createSeedState(): AppState {
   return {
     session: {
       userId: "usr-1",
-      email: "manuela@andestec.cl",
-      name: "Manuela Vergara",
+      email: "catalina@andestec.cl",
+      name: "Catalina Reyes",
       role: "admin",
       phone: "+56 9 8765 4411",
       title: "Gerenta general",

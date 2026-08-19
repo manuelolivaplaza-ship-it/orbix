@@ -519,6 +519,8 @@ export function Orb({
             rx={morph.bodyRx}
             ry={morph.bodyRy}
             fill={bodyFill}
+            stroke="var(--orb-stroke, none)"
+            strokeWidth="var(--orb-stroke-width, 0)"
           />
           <rect
             data-orb="eye-left"

@@ -45,16 +45,22 @@ export function FaqSection() {
   };
 
   return (
-    <section className="py-24 border-t border-line">
+    <section className="pt-20 sm:pt-24 pb-4 sm:pb-6 border-t border-line">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-line bg-surface text-xs font-semibold text-neutral-600 dark:text-neutral-300 mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-line bg-surface text-xs font-semibold text-secondary mb-3">
             <HelpCircle size={14} /> Preguntas Frecuentes
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
+          <h2
+            className="text-3xl sm:text-4xl font-bold tracking-tight"
+            style={{ color: "var(--foreground)" }}
+          >
             Todo lo que necesitas saber antes de empezar
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-400">
+          <p
+            className="mt-3 text-sm sm:text-base"
+            style={{ color: "var(--orbix-secondary)" }}
+          >
             Resolvemos las dudas más comunes sobre la operación con Orbix.
           </p>
         </div>
@@ -68,8 +74,8 @@ export function FaqSection() {
                 className={cn(
                   "rounded-2xl border transition-all overflow-hidden",
                   isOpen
-                    ? "border-neutral-400/40 dark:border-neutral-700 bg-surface shadow-sm"
-                    : "border-line bg-surface/60 hover:bg-surface hover:border-neutral-400/30"
+                    ? "border-foreground/30 bg-surface shadow-sm"
+                    : "border-line bg-surface/60 hover:bg-surface hover:border-foreground/20"
                 )}
               >
                 <button
@@ -77,14 +83,17 @@ export function FaqSection() {
                   onClick={() => toggle(idx)}
                   className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 cursor-pointer select-none"
                 >
-                  <span className="text-sm sm:text-base font-bold text-neutral-900 dark:text-neutral-50 leading-snug">
+                  <span
+                    className="text-sm sm:text-base font-bold leading-snug"
+                    style={{ color: "var(--foreground)" }}
+                  >
                     {faq.q}
                   </span>
                   <ChevronDown
                     size={18}
                     className={cn(
-                      "text-neutral-500 dark:text-neutral-400 shrink-0 transition-transform duration-200",
-                      isOpen && "rotate-180 text-neutral-900 dark:text-neutral-100"
+                      "shrink-0 transition-transform duration-200",
+                      isOpen ? "rotate-180 text-foreground" : "text-muted"
                     )}
                   />
                 </button>
@@ -97,7 +106,10 @@ export function FaqSection() {
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <div className="px-5 pb-5 sm:px-6 sm:pb-6 text-xs sm:text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed border-t border-line pt-4 font-normal">
+                      <div
+                        className="px-5 pb-5 sm:px-6 sm:pb-6 text-xs sm:text-sm leading-relaxed border-t border-line pt-4 font-normal"
+                        style={{ color: "var(--orbix-secondary)" }}
+                      >
                         {faq.a}
                       </div>
                     </motion.div>

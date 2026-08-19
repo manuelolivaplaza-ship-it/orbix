@@ -12,29 +12,36 @@ import {
   Settings,
   PanelLeft,
   CheckCircle2,
-  Plus,
   Check,
   Search,
   MessageSquare,
   Paperclip,
   ArrowUp,
+  ArrowUpRight,
   Wallet,
   Bell,
   FilePlus,
+  AlertTriangle,
+  Clock,
+  CircleUser,
 } from "lucide-react";
 import { Orb } from "@/components/orb/Orb";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import { formatCLP } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
-type NavSection = "dashboard" | "facturacion" | "cobranza" | "caja" | "sueldos" | "empresas" | "reportes" | "configuracion";
+type NavSection =
+  | "dashboard"
+  | "facturacion"
+  | "cobranza"
+  | "caja"
+  | "sueldos"
+  | "cerrar"
+  | "portal"
+  | "empresas"
+  | "reportes"
+  | "configuracion";
 type AppMode = "platform" | "chat";
-
-interface Task {
-  id: string;
-  text: string;
-  tag: string;
-  urgency: "critical" | "warn" | "info";
-  done: boolean;
-}
 
 interface ChatMsg {
   id: string;
@@ -50,39 +57,46 @@ interface ChatMsg {
 const GROUPS = [
   {
     label: "Hoy",
-    items: [{ id: "dashboard" as NavSection, label: "Dashboard", icon: LayoutDashboard, badge: "" }],
+    items: [{ id: "dashboard" as NavSection, label: "Dashboard", icon: LayoutDashboard }],
   },
   {
     label: "Comercial",
     items: [
-      { id: "facturacion" as NavSection, label: "Facturación", icon: FileText, badge: "3" },
-      { id: "cobranza" as NavSection, label: "Cobranza", icon: Wallet, badge: "" },
-      { id: "caja" as NavSection, label: "Caja", icon: Landmark, badge: "" },
+      { id: "facturacion" as NavSection, label: "Facturación", icon: FileText },
+      { id: "cobranza" as NavSection, label: "Cobranza", icon: Wallet },
+      { id: "caja" as NavSection, label: "Caja", icon: Landmark },
     ],
   },
   {
     label: "Personas",
     items: [
-      { id: "sueldos" as NavSection, label: "Equipo", icon: Users, badge: "6" },
-      { id: "sueldos" as NavSection, label: "Cerrar mes", icon: Wallet, badge: "" },
+      { id: "sueldos" as NavSection, label: "Equipo", icon: Users },
+      { id: "cerrar" as NavSection, label: "Cerrar mes", icon: Wallet },
+      { id: "portal" as NavSection, label: "Portal colaborador", icon: CircleUser },
     ],
   },
   {
     label: "Estudio",
     items: [
-      { id: "empresas" as NavSection, label: "Empresas", icon: Building2, badge: "" },
-      { id: "reportes" as NavSection, label: "Reportes", icon: BarChart3, badge: "" },
-      { id: "configuracion" as NavSection, label: "Configuración", icon: Settings, badge: "" },
+      { id: "empresas" as NavSection, label: "Empresas", icon: Building2 },
+      { id: "reportes" as NavSection, label: "Reportes", icon: BarChart3 },
+      { id: "configuracion" as NavSection, label: "Configuración", icon: Settings },
     ],
   },
 ];
 
-const INITIAL_TASKS: Task[] = [
-  { id: "1", text: "Emitir F-1052 a Colegio Los Alerces", tag: "SII", urgency: "warn", done: true },
-  { id: "2", text: "Conciliar 3 depósitos en Banco de Chile", tag: "Banco", urgency: "info", done: true },
-  { id: "3", text: "Enviar aviso cobranza F-1051 Río Claro", tag: "Cobranza", urgency: "critical", done: false },
-  { id: "4", text: "Firmar liquidaciones de agosto (6 fichas)", tag: "Nómina", urgency: "critical", done: false },
-];
+const TAB_META: Record<NavSection, { kicker: string; title: string }> = {
+  dashboard: { kicker: "Hoy", title: "Andes Tecnología SpA" },
+  facturacion: { kicker: "Comercial", title: "Facturación" },
+  cobranza: { kicker: "Comercial", title: "Cobranza" },
+  caja: { kicker: "Comercial", title: "Caja" },
+  sueldos: { kicker: "Personas", title: "Equipo" },
+  cerrar: { kicker: "Personas", title: "Cerrar mes" },
+  portal: { kicker: "Personas", title: "Portal colaborador" },
+  empresas: { kicker: "Estudio", title: "Empresas" },
+  reportes: { kicker: "Estudio", title: "Reportes" },
+  configuracion: { kicker: "Estudio", title: "Configuración" },
+};
 
 const CHAT_PROMPTS = [
   {
@@ -119,7 +133,6 @@ export function ProductPreview({ className }: { className?: string }) {
   const [mode, setMode] = useState<AppMode>("platform");
   const [activeTab, setActiveTab] = useState<NavSection>("dashboard");
   const [collapsed, setCollapsed] = useState(false);
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [factFilter, setFactFilter] = useState<"todas" | "pendientes" | "pagadas">("todas");
   const [orbStatus, setOrbStatus] = useState<"idle" | "working" | "happy">("idle");
   const [chatInput, setChatInput] = useState("");
@@ -130,7 +143,7 @@ export function ProductPreview({ className }: { className?: string }) {
     {
       id: "init",
       sender: "orb",
-      text: "¡Hola Camila! Soy Orb. Puedo facturar, leer un Excel, avisar cobranzas y mover la oficina.",
+      text: "¡Hola Catalina! Soy Orb. Puedo facturar, leer un Excel, avisar cobranzas y mover la oficina.",
       time: "10:30",
     },
   ]);
@@ -141,14 +154,6 @@ export function ProductPreview({ className }: { className?: string }) {
       chatScrollerRef.current.scrollTop = chatScrollerRef.current.scrollHeight;
     }
   }, [messages, isTyping]);
-
-  const toggleTask = (id: string) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
-    );
-    setOrbStatus("happy");
-    setTimeout(() => setOrbStatus("idle"), 2200);
-  };
 
   const handleSendPrompt = (item: (typeof CHAT_PROMPTS)[0]) => {
     const userMsg: ChatMsg = {
@@ -225,7 +230,7 @@ export function ProductPreview({ className }: { className?: string }) {
       <div className="pointer-events-none absolute -inset-8 rounded-[50px] bg-gradient-to-tr from-amber-500/15 via-violet-500/10 to-sky-500/15 blur-3xl opacity-75 dark:opacity-60" />
 
       <motion.div
-        className="relative h-[540px] sm:h-[580px] w-full overflow-hidden rounded-2xl sm:rounded-[26px] border border-line bg-surface/95 shadow-[0_25px_80px_rgba(0,0,0,0.10)] dark:shadow-[0_35px_110px_rgba(0,0,0,0.65)] ring-1 ring-foreground/[0.04] transition-all backdrop-blur-xl flex flex-col"
+        className="relative h-[560px] sm:h-[640px] w-full overflow-hidden rounded-2xl sm:rounded-[26px] border border-line bg-surface/95 shadow-[0_25px_80px_rgba(0,0,0,0.10)] dark:shadow-[0_35px_110px_rgba(0,0,0,0.65)] ring-1 ring-foreground/[0.04] transition-all backdrop-blur-xl flex flex-col"
         initial={{ opacity: 0, y: 22 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
@@ -317,7 +322,7 @@ export function ProductPreview({ className }: { className?: string }) {
                           : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
                       )}
                     >
-                      <LayoutDashboard size={11} /> Dashboard
+                      <LayoutDashboard size={11} /> Plataforma
                     </button>
                     <button
                       type="button"
@@ -341,7 +346,7 @@ export function ProductPreview({ className }: { className?: string }) {
                       setCollapsed(false);
                       setMode("platform");
                     }}
-                    title="Dashboard"
+                    title="Plataforma"
                     className={cn(
                       "size-7 rounded-md flex items-center justify-center transition-colors",
                       mode === "platform" ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
@@ -491,16 +496,6 @@ export function ProductPreview({ className }: { className?: string }) {
                                 <Icon size={14} />
                               </div>
                               {!collapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
-                              {!collapsed && item.badge && (
-                                <span
-                                  className={cn(
-                                    "px-1.5 py-0.2 rounded-full text-[9px] font-semibold",
-                                    isActive ? "bg-foreground/10 text-foreground" : "bg-sidebar-accent text-muted-foreground"
-                                  )}
-                                >
-                                  {item.badge}
-                                </span>
-                              )}
                             </button>
                           );
                         })}
@@ -528,13 +523,11 @@ export function ProductPreview({ className }: { className?: string }) {
                         collapsed ? "justify-center px-0" : "gap-2 px-1.5"
                       )}
                     >
-                      <div className="size-6 rounded-full bg-rose-600 text-white font-bold flex items-center justify-center text-[10px] shadow-xs shrink-0">
-                        CS
-                      </div>
+                      <UserAvatar name="Catalina Reyes" color="#d4d4d4" size={24} className="size-6! shrink-0 rounded-full" />
                       {!collapsed && (
                         <div className="min-w-0 flex-1 overflow-hidden">
-                          <p className="truncate text-[11px] font-semibold text-sidebar-foreground leading-tight">Camila Soto</p>
-                          <p className="truncate text-[9px] text-muted-foreground leading-tight">Andes SpA · Admin</p>
+                          <p className="truncate text-[11px] font-semibold text-sidebar-foreground leading-tight">Catalina Reyes</p>
+                          <p className="truncate text-[9px] text-muted-foreground leading-tight">Andes Tecnología SpA</p>
                         </div>
                       )}
                     </div>
@@ -545,49 +538,40 @@ export function ProductPreview({ className }: { className?: string }) {
           </aside>
 
           {/* MAIN PLATFORM WORKSPACE */}
-          <main className="flex flex-col justify-between p-3 sm:p-4 overflow-hidden bg-background min-h-0">
-            {/* Real Platform Header */}
-            <div className="flex items-center justify-between pb-2.5 border-b border-line gap-2 shrink-0">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted">
-                  {activeTab === "dashboard" ? "Hoy" : "Comercial & Nómina"}
-                </p>
-                <h3 className="text-sm sm:text-base font-bold tracking-tight text-ink flex items-center gap-2">
-                  {activeTab === "dashboard" && "Andes Tecnología SpA"}
-                  {activeTab === "facturacion" && "Facturación Electrónica DTE"}
-                  {activeTab === "cobranza" && "Cobranza Activa"}
-                  {activeTab === "sueldos" && "Nómina y Liquidaciones"}
-                  {activeTab === "caja" && "Conciliación Bancaria"}
-                  {activeTab === "empresas" && "Empresas y RUTs"}
-                  {activeTab === "reportes" && "Reportes Financieros"}
-                  {activeTab === "configuracion" && "Configuración de la Empresa"}
-                </h3>
+          <main className="flex flex-col overflow-hidden bg-background min-h-0">
+            {activeTab !== "dashboard" ? (
+              <div className="flex items-center justify-between px-3 sm:px-4 pt-3 pb-2.5 border-b border-line gap-2 shrink-0">
+                <div>
+                  <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted">
+                    {TAB_META[activeTab].kicker}
+                  </p>
+                  <h3 className="text-sm sm:text-base font-semibold tracking-tight text-ink">
+                    {TAB_META[activeTab].title}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("facturacion")}
+                    className="h-7 px-2.5 rounded-lg bg-foreground text-background text-[11px] font-semibold flex items-center gap-1 hover:opacity-90 transition-all shadow-xs cursor-pointer"
+                  >
+                    <FilePlus size={12} />
+                    <span className="hidden sm:inline">Nueva factura</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("cerrar")}
+                    className="h-7 px-2.5 rounded-lg border border-line bg-surface text-secondary hover:text-ink text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Wallet size={12} />
+                    <span className="hidden sm:inline">Cerrar agosto</span>
+                  </button>
+                </div>
               </div>
+            ) : null}
 
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("facturacion")}
-                  className="h-7 px-2.5 rounded-lg bg-foreground text-background text-[11px] font-semibold flex items-center gap-1 hover:opacity-90 transition-all shadow-xs cursor-pointer"
-                >
-                  <FilePlus size={12} />
-                  <span className="hidden sm:inline">Nueva factura</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("sueldos")}
-                  className="h-7 px-2.5 rounded-lg border border-line bg-surface text-secondary hover:text-ink text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                >
-                  <Wallet size={12} />
-                  <span className="hidden sm:inline">Cerrar agosto</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Scrollable View Content */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden pt-2.5 pr-0.5 min-h-0 space-y-3">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 py-3 min-h-0">
               <AnimatePresence mode="wait">
-                {/* TAB 1: REAL PLATFORM DASHBOARD */}
                 {activeTab === "dashboard" && (
                   <motion.div
                     key="dash"
@@ -595,128 +579,8 @@ export function ProductPreview({ className }: { className?: string }) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.18 }}
-                    className="space-y-3"
                   >
-                    {/* Top 4 Metrics */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                      <div className="rounded-xl border border-line bg-surface p-2.5">
-                        <p className="text-[9.5px] font-bold text-muted uppercase">Caja neta</p>
-                        <p className="font-mono text-[13.5px] font-bold text-ink mt-0.5">$14.280.000</p>
-                        <span className="text-[9px] text-muted">8 movimientos</span>
-                      </div>
-                      <div className="rounded-xl border border-line bg-surface p-2.5">
-                        <p className="text-[9.5px] font-bold text-muted uppercase">Ingresos cobrados</p>
-                        <p className="font-mono text-[13.5px] font-bold text-ink mt-0.5">$24.850.000</p>
-                        <span className="text-[9px] font-semibold text-emerald-500">12 DTEs pagados</span>
-                      </div>
-                      <div className="rounded-xl border border-line bg-surface p-2.5">
-                        <p className="text-[9.5px] font-bold text-muted uppercase">Por cobrar</p>
-                        <p className="font-mono text-[13.5px] font-bold text-amber-500 mt-0.5">$9.049.950</p>
-                        <span className="text-[9px] text-muted">3 pendientes</span>
-                      </div>
-                      <div className="rounded-xl border border-line bg-surface p-2.5">
-                        <p className="text-[9.5px] font-bold text-muted uppercase">Nómina estimada</p>
-                        <p className="font-mono text-[13.5px] font-bold text-ink mt-0.5">$6.820.000</p>
-                        <span className="text-[9px] text-emerald-500 font-semibold">6 liquidaciones</span>
-                      </div>
-                    </div>
-
-                    {/* Two Columns: Inbox de Trabajo + Aging de Cobranza */}
-                    <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-2.5 items-start">
-                      {/* Left: Inbox de Trabajo with Urgency Tags */}
-                      <div className="rounded-xl border border-line bg-surface p-3 space-y-2">
-                        <div className="flex items-center justify-between text-xs">
-                          <div>
-                            <h4 className="font-bold text-ink text-[11.5px]">Inbox de trabajo</h4>
-                            <p className="text-[9.5px] text-muted font-mono">{tasks.filter((t) => !t.done).length} pendientes de acción</p>
-                          </div>
-                          <span className="px-2 py-0.5 rounded-md bg-foreground/5 text-muted text-[10px] font-medium">Agosto 2026</span>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          {tasks.map((task) => (
-                            <div
-                              key={task.id}
-                              onClick={() => toggleTask(task.id)}
-                              className={cn(
-                                "p-2 rounded-lg border text-xs flex items-center justify-between cursor-pointer transition-colors border-l-[3px]",
-                                task.urgency === "critical" && "border-l-red-500",
-                                task.urgency === "warn" && "border-l-amber-500",
-                                task.urgency === "info" && "border-l-foreground/40",
-                                task.done ? "border-line bg-foreground/[0.02] opacity-60" : "border-line bg-background hover:bg-foreground/[0.02]"
-                              )}
-                            >
-                              <div className="flex items-center gap-2 min-w-0">
-                                <div
-                                  className={cn(
-                                    "size-3.5 rounded border flex items-center justify-center shrink-0",
-                                    task.done ? "border-emerald-500 bg-emerald-500 text-white" : "border-line"
-                                  )}
-                                >
-                                  {task.done && <Check size={9} strokeWidth={3} />}
-                                </div>
-                                <span className={cn("text-[11px] truncate", task.done && "line-through text-muted")}>
-                                  {task.text}
-                                </span>
-                              </div>
-                              <span className="text-[8.5px] font-mono px-1.5 py-0.2 rounded bg-foreground/[0.05] text-muted shrink-0">
-                                {task.tag}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Right: Aging de Cobranza Bar & Top Deudores */}
-                      <div className="space-y-2.5">
-                        <div className="rounded-xl border border-line bg-surface p-3 space-y-2">
-                          <div className="flex items-center justify-between text-xs">
-                            <h4 className="font-bold text-ink text-[11.5px]">Aging de cobranza</h4>
-                            <span className="text-[10px] text-muted">Total $9.049.950</span>
-                          </div>
-
-                          {/* Multi-color Aging Bar */}
-                          <div className="flex h-2.5 overflow-hidden rounded-full bg-foreground/10 gap-0.5">
-                            <div className="h-full bg-foreground rounded-l-full" style={{ width: "45%" }} title="Al día" />
-                            <div className="h-full bg-amber-500" style={{ width: "25%" }} title="1-30 días" />
-                            <div className="h-full bg-orange-500" style={{ width: "18%" }} title="31-60 días" />
-                            <div className="h-full bg-red-500 rounded-r-full" style={{ width: "12%" }} title="+90 días" />
-                          </div>
-
-                          <div className="grid grid-cols-4 gap-1 text-center text-[9px] pt-1">
-                            <div>
-                              <p className="text-muted font-bold">AL DÍA</p>
-                              <p className="font-mono font-bold text-ink">1 DTE</p>
-                            </div>
-                            <div>
-                              <p className="text-amber-500 font-bold">30 DÍAS</p>
-                              <p className="font-mono font-bold text-ink">1 DTE</p>
-                            </div>
-                            <div>
-                              <p className="text-orange-500 font-bold">60 DÍAS</p>
-                              <p className="font-mono font-bold text-ink">1 DTE</p>
-                            </div>
-                            <div>
-                              <p className="text-red-500 font-bold">+90 DÍAS</p>
-                              <p className="font-mono font-bold text-ink">0 DTE</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Top Deudores Mini Card */}
-                        <div className="rounded-xl border border-line bg-surface p-2.5 text-xs space-y-1.5">
-                          <p className="text-[10px] font-bold uppercase text-muted">Top Deudores</p>
-                          <div className="flex items-center justify-between text-[10.5px]">
-                            <span className="truncate">Constructora Río Claro</span>
-                            <span className="font-mono font-bold text-amber-500">$3.450.000</span>
-                          </div>
-                          <div className="flex items-center justify-between text-[10.5px]">
-                            <span className="truncate">Colegio Los Alerces</span>
-                            <span className="font-mono font-bold text-ink">$1.240.000</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <PreviewDashboard onNavigate={setActiveTab} />
                   </motion.div>
                 )}
 
@@ -790,7 +654,7 @@ export function ProductPreview({ className }: { className?: string }) {
                 )}
 
                 {/* TAB 3: SUELDOS */}
-                {activeTab === "sueldos" && (
+                {(activeTab === "sueldos" || activeTab === "cerrar") && (
                   <motion.div
                     key="sueldos"
                     initial={{ opacity: 0, y: 4 }}
@@ -897,6 +761,23 @@ export function ProductPreview({ className }: { className?: string }) {
                   </motion.div>
                 )}
 
+                {activeTab === "portal" && (
+                  <motion.div
+                    key="portal"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.18 }}
+                    className="space-y-2"
+                  >
+                    <div className="p-3 rounded-2xl border border-line bg-surface/75 space-y-1.5">
+                      <p className="font-semibold text-ink text-sm">Catalina Reyes</p>
+                      <p className="text-[11px] text-muted">Liquidación agosto · Habitat · Fonasa</p>
+                      <p className="font-mono text-sm font-semibold text-foreground">{formatCLP(1850000)} líquido</p>
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* TAB 6: REPORTES */}
                 {activeTab === "reportes" && (
                   <motion.div
@@ -936,5 +817,235 @@ export function ProductPreview({ className }: { className?: string }) {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+const METRICS = [
+  { label: "Caja neta", value: 14130300, hint: "11 movimientos" },
+  { label: "Ingresos cobrados", value: 19504100, hint: "6 facturas pagadas" },
+  { label: "Por cobrar", value: 10109050, hint: "Facturas enviadas o vencidas" },
+  { label: "Nómina estimada", value: 11194828, hint: "Líquido del periodo" },
+];
+
+const INBOX: Array<{
+  id: string;
+  title: string;
+  detail: string;
+  amount?: number;
+  urgency: "critical" | "warn" | "info";
+}> = [
+  { id: "1", title: "F-1044 vencida", detail: "Constructora Río Claro · 62 días", amount: 4185500, urgency: "critical" },
+  { id: "2", title: "Pagar Previred", detail: "Cotizaciones julio", amount: 2140000, urgency: "critical" },
+  { id: "3", title: "F-1043 vencida", detail: "Clínica del Valle · 7 días", amount: 2694400, urgency: "warn" },
+  { id: "4", title: "F-1052 vencida", detail: "Mercado Norte SpA · 48 días", amount: 1859100, urgency: "warn" },
+];
+
+const AGING = [
+  { key: "Al día", count: 1, color: "var(--foreground)" },
+  { key: "1–30", count: 1, color: "var(--orbix-secondary)" },
+  { key: "31–60", count: 1, color: "var(--orbix-muted)" },
+  { key: "61–90", count: 1, color: "var(--orbix-faint)" },
+  { key: "+90", count: 0, color: "#ef4444" },
+];
+
+const DEBTORS = [
+  { name: "Constructora Río Claro", count: 2, amount: 6955550 },
+  { name: "Clínica del Valle", count: 1, amount: 2694400 },
+  { name: "Mercado Norte SpA", count: 1, amount: 1859100 },
+];
+
+const ACTIONS = [
+  { id: "facturacion" as NavSection, label: "Nueva cotización" },
+  { id: "cobranza" as NavSection, label: "Enviar recordatorios" },
+  { id: "cerrar" as NavSection, label: "Cerrar nómina de agosto" },
+  { id: "caja" as NavSection, label: "Conciliar cartola" },
+  { id: "empresas" as NavSection, label: "Vista consolidada" },
+];
+
+const CASH_POINTS = [14130300, 13980000, 13820000, 3200000, 3380000, 3475522];
+
+const URGENCY_BORDER = {
+  critical: "border-l-red-400",
+  warn: "border-l-amber-400",
+  info: "border-l-foreground/40",
+};
+
+function PreviewDashboard({
+  onNavigate,
+}: {
+  onNavigate: (tab: NavSection) => void;
+}) {
+  return (
+    <div>
+      <div className="mb-4 flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.22em] text-muted">Hoy</p>
+          <h3 className="text-lg font-semibold tracking-tight text-ink sm:text-xl">Andes Tecnología SpA</h3>
+          <p className="mt-1 max-w-md text-[11px] text-secondary sm:text-xs">
+            Lo que hay que hacer hoy: cobrar, pagar y cerrar el mes.
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-nowrap items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => onNavigate("facturacion")}
+            className="h-7 shrink-0 px-2.5 rounded-lg bg-foreground text-background text-[11px] font-semibold inline-flex items-center gap-1 hover:opacity-90 shadow-xs cursor-pointer whitespace-nowrap"
+          >
+            <FilePlus size={12} /> Nueva factura
+          </button>
+          <button
+            type="button"
+            onClick={() => onNavigate("cerrar")}
+            className="h-7 shrink-0 px-2.5 rounded-lg border border-line bg-surface text-[11px] font-semibold inline-flex items-center gap-1 text-secondary hover:text-ink cursor-pointer whitespace-nowrap"
+          >
+            <Wallet size={12} /> Cerrar agosto
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
+        {METRICS.map((metric) => (
+          <div key={metric.label} className="rounded-2xl border border-line bg-surface/75 p-3">
+            <p className="text-[9px] font-medium uppercase tracking-[0.16em] text-muted-foreground">{metric.label}</p>
+            <p className="mt-1.5 font-mono text-[13px] sm:text-[15px] font-semibold tracking-tight text-foreground tabular-nums">
+              {formatCLP(metric.value)}
+            </p>
+            <p className="mt-1 text-[10px] text-muted-foreground">{metric.hint}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-3 grid gap-2 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="rounded-2xl border border-line bg-surface/75 p-3">
+          <div className="mb-2.5 flex items-center justify-between">
+            <div>
+              <h4 className="text-[12px] font-medium text-foreground">Inbox de trabajo</h4>
+              <p className="text-[10px] text-muted-foreground">{INBOX.length} pendientes</p>
+            </div>
+            <span className="inline-flex h-5 items-center rounded-full border border-line bg-foreground/[0.06] px-2 text-[10px] font-semibold text-secondary">
+              Agosto 2026
+            </span>
+          </div>
+          <ul className="space-y-1.5">
+            {INBOX.map((task) => {
+              const Icon = task.urgency === "critical" ? AlertTriangle : task.urgency === "warn" ? Clock : CheckCircle2;
+              return (
+                <li
+                  key={task.id}
+                  className={cn(
+                    "flex items-center justify-between gap-2 rounded-lg border border-line border-l-2 bg-foreground/[0.03] px-2.5 py-1.5",
+                    URGENCY_BORDER[task.urgency],
+                  )}
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Icon size={12} className="shrink-0 text-muted-foreground" />
+                    <div className="min-w-0">
+                      <p className="truncate text-[11px] text-foreground">{task.title}</p>
+                      <p className="truncate text-[9.5px] text-muted-foreground">{task.detail}</p>
+                    </div>
+                  </div>
+                  {task.amount != null ? (
+                    <span className="font-mono tabular-nums text-[10px] text-foreground shrink-0">{formatCLP(task.amount)}</span>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <div className="space-y-2">
+          <div className="rounded-2xl border border-line bg-surface/75 p-3">
+            <div className="mb-2.5 flex items-center justify-between">
+              <h4 className="text-[12px] font-medium text-foreground">Aging de cobranza</h4>
+              <span className="text-[10px] text-muted-foreground">Ver cobranza</span>
+            </div>
+            <div className="flex h-2.5 overflow-hidden rounded-full bg-foreground/8">
+              {AGING.map((bucket) => (
+                <div
+                  key={bucket.key}
+                  className="h-full"
+                  style={{ width: `${bucket.count === 0 ? 0 : 25}%`, background: bucket.color }}
+                />
+              ))}
+            </div>
+            <ul className="mt-3 grid grid-cols-5 gap-1 text-center">
+              {AGING.map((bucket) => (
+                <li key={bucket.key}>
+                  <p className="text-[8.5px] uppercase tracking-wider text-muted-foreground">{bucket.key}</p>
+                  <p className="mt-0.5 font-mono text-[11px] text-foreground">{bucket.count}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="rounded-2xl border border-line bg-surface/75 p-3">
+            <h4 className="mb-2 text-[12px] font-medium text-foreground">Top deudores</h4>
+            <ul className="space-y-2">
+              {DEBTORS.map((debtor) => (
+                <li key={debtor.name} className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-[11px] text-foreground">{debtor.name}</p>
+                    <p className="text-[9.5px] text-muted-foreground">{debtor.count} docs</p>
+                  </div>
+                  <span className="font-mono tabular-nums text-[11px] text-foreground shrink-0">{formatCLP(debtor.amount)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 grid gap-2 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-2xl border border-line bg-surface/75 p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <h4 className="text-[12px] font-medium text-foreground">Flujo de caja 30 días</h4>
+            <span className="text-[10px] text-muted-foreground">Abrir caja</span>
+          </div>
+          <MiniCashSpark points={CASH_POINTS} />
+          <p className="mt-1 text-[10px] text-muted-foreground">Proyección 17/09: {formatCLP(3475522)}</p>
+        </div>
+
+        <div className="rounded-2xl border border-line bg-surface/75 p-3">
+          <h4 className="mb-2 text-[12px] font-medium text-foreground">Acciones</h4>
+          <div className="space-y-1.5">
+            {ACTIONS.map((action) => (
+              <button
+                key={action.label}
+                type="button"
+                onClick={() => onNavigate(action.id)}
+                className="flex w-full items-center justify-between rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] text-foreground hover:bg-foreground/5 cursor-pointer"
+              >
+                {action.label}
+                <ArrowUpRight size={12} className="text-muted-foreground" />
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-[10px] text-muted-foreground">Por pagar</p>
+          <p className="font-mono text-sm font-semibold text-foreground tabular-nums">{formatCLP(4450000)}</p>
+          <p className="text-[9.5px] text-muted-foreground">Cuentas por pagar próximas</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniCashSpark({ points }: { points: number[] }) {
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const span = max - min || 1;
+  const w = 320;
+  const h = 72;
+  const d = points
+    .map((value, i) => {
+      const x = (i / (points.length - 1)) * w;
+      const y = h - ((value - min) / span) * (h - 10) - 5;
+      return `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(" ");
+
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="h-16 w-full" aria-hidden>
+      <path d={d} fill="none" stroke="currentColor" strokeWidth="2" className="text-foreground" />
+    </svg>
   );
 }

@@ -236,7 +236,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       {chat ? null : (
-      <SidebarFooter className="gap-1 overflow-hidden p-1.5">
+      <SidebarFooter className="gap-1 overflow-visible p-1.5">
         <SidebarSeparator className="mx-0 mb-1" />
         <SidebarMenu>
           <SidebarMenuItem>
@@ -288,13 +288,13 @@ export function AppSidebar() {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   tooltip={session?.name ?? "Perfil"}
-                  className="h-12 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:overflow-hidden"
+                  className="h-10 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:overflow-visible!"
                 >
                   <UserAvatar
                     name={session?.name ?? "Invitado"}
                     color={session?.avatarColor}
-                    size={collapsed ? 18 : 22}
-                    className={cn("shrink-0", collapsed ? "!size-[18px]" : "!size-[22px]")}
+                    size={24}
+                    className="size-6! shrink-0 rounded-full"
                   />
                   <span className="min-w-0 flex-1 truncate text-left group-data-[collapsible=icon]:hidden">
                     <span className="block truncate text-[13px] leading-tight">

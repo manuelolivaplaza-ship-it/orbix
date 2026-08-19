@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, ShieldCheck } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { Orb } from "@/components/orb/Orb";
 import { ProductPreview } from "@/components/landing/ProductPreview";
 import { IntegrationsBar } from "@/components/landing/IntegrationsBar";
@@ -98,7 +98,7 @@ export default function LandingPage() {
       <LandingCurtain />
       <header
         className={cn(
-          "landing-header sticky top-0 z-20 transition-all duration-300",
+          "landing-header sticky top-0 z-50 transition-all duration-300",
           isScrolled
             ? "border-b border-line bg-base/85 backdrop-blur-xl shadow-xs"
             : "border-b border-transparent bg-transparent backdrop-blur-none"
@@ -294,35 +294,6 @@ export default function LandingPage() {
       <div id="faq">
         <FaqSection />
       </div>
-
-      {/* Final Call to Action */}
-      <section className="border-t border-line py-24 relative overflow-hidden">
-        <div className="pointer-events-none absolute -inset-20 rounded-full bg-gradient-to-tr from-amber-500/10 via-violet-500/10 to-sky-500/10 blur-3xl opacity-60" />
-        <RevealOnScroll className="mx-auto max-w-5xl px-5 text-center relative z-10 space-y-6">
-          <div className="inline-flex justify-center">
-            <Orb size={64} state="happy" hop playful trackPointer={false} />
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-ink">
-            Empieza a operar con Orbix hoy mismo
-          </h2>
-          <p className="max-w-xl mx-auto text-base sm:text-lg text-secondary">
-            Crea tu cuenta en menos de un minuto y descubre lo que se siente tener a tu oficina financiera y operativa al día.
-          </p>
-          <div className="pt-4 flex flex-wrap justify-center gap-3.5">
-            <Link href="/register">
-              <Button size="lg" className="h-12 rounded-full px-8 text-base font-semibold shadow-md">
-                Crear cuenta gratis
-                <ArrowRight size={17} />
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button size="lg" variant="secondary" className="h-12 rounded-full px-8 text-base font-medium">
-                Iniciar sesión
-              </Button>
-            </Link>
-          </div>
-        </RevealOnScroll>
-      </section>
 
       {/* Minimalist SpaceX / x.ai inspired Orbital Footer */}
       <Footer />

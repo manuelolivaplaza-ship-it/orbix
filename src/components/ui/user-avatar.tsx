@@ -24,8 +24,16 @@ export function UserAvatar({
   return (
     <Avatar
       size={variant}
-      className={cn("rounded-full", className)}
-      style={{ width: size, height: size, minWidth: size, minHeight: size, maxWidth: size, maxHeight: size }}
+      className={cn("aspect-square rounded-full", className)}
+      style={{
+        width: size,
+        height: size,
+        minWidth: size,
+        minHeight: size,
+        maxWidth: size,
+        maxHeight: size,
+        aspectRatio: "1 / 1",
+      }}
     >
       <AvatarFallback
         className={cn("text-[0.34em] font-medium", light ? "text-black" : "text-white")}
