@@ -14,25 +14,25 @@ import {
   CheckCircle2,
   Plus,
   Check,
-  TrendingUp,
-  Sparkles,
   Search,
   MessageSquare,
   Paperclip,
   ArrowUp,
   Wallet,
-  CircleUser,
+  Bell,
+  FilePlus,
 } from "lucide-react";
 import { Orb } from "@/components/orb/Orb";
 import { cn } from "@/lib/cn";
 
-type NavSection = "dashboard" | "facturacion" | "cobranza" | "caja" | "sueldos";
+type NavSection = "dashboard" | "facturacion" | "cobranza" | "caja" | "sueldos" | "empresas" | "reportes" | "configuracion";
 type AppMode = "platform" | "chat";
 
 interface Task {
   id: string;
   text: string;
   tag: string;
+  urgency: "critical" | "warn" | "info";
   done: boolean;
 }
 
@@ -70,18 +70,18 @@ const GROUPS = [
   {
     label: "Estudio",
     items: [
-      { id: "dashboard" as NavSection, label: "Empresas", icon: Building2, badge: "" },
-      { id: "dashboard" as NavSection, label: "Reportes", icon: BarChart3, badge: "" },
-      { id: "dashboard" as NavSection, label: "Configuración", icon: Settings, badge: "" },
+      { id: "empresas" as NavSection, label: "Empresas", icon: Building2, badge: "" },
+      { id: "reportes" as NavSection, label: "Reportes", icon: BarChart3, badge: "" },
+      { id: "configuracion" as NavSection, label: "Configuración", icon: Settings, badge: "" },
     ],
   },
 ];
 
 const INITIAL_TASKS: Task[] = [
-  { id: "1", text: "Emitir F-1052 a Colegio Los Alerces", tag: "SII", done: true },
-  { id: "2", text: "Conciliar 3 depósitos en Banco de Chile", tag: "Banco", done: true },
-  { id: "3", text: "Enviar aviso cobranza F-1051 Río Claro", tag: "Cobranza", done: false },
-  { id: "4", text: "Firmar liquidaciones de agosto (6 fichas)", tag: "Nómina", done: false },
+  { id: "1", text: "Emitir F-1052 a Colegio Los Alerces", tag: "SII", urgency: "warn", done: true },
+  { id: "2", text: "Conciliar 3 depósitos en Banco de Chile", tag: "Banco", urgency: "info", done: true },
+  { id: "3", text: "Enviar aviso cobranza F-1051 Río Claro", tag: "Cobranza", urgency: "critical", done: false },
+  { id: "4", text: "Firmar liquidaciones de agosto (6 fichas)", tag: "Nómina", urgency: "critical", done: false },
 ];
 
 const CHAT_PROMPTS = [
@@ -225,7 +225,7 @@ export function ProductPreview({ className }: { className?: string }) {
       <div className="pointer-events-none absolute -inset-8 rounded-[50px] bg-gradient-to-tr from-amber-500/15 via-violet-500/10 to-sky-500/15 blur-3xl opacity-75 dark:opacity-60" />
 
       <motion.div
-        className="relative h-[530px] sm:h-[560px] w-full overflow-hidden rounded-2xl sm:rounded-[26px] border border-line bg-surface/95 shadow-[0_25px_80px_rgba(0,0,0,0.10)] dark:shadow-[0_35px_110px_rgba(0,0,0,0.65)] ring-1 ring-foreground/[0.04] transition-all backdrop-blur-xl flex flex-col"
+        className="relative h-[540px] sm:h-[580px] w-full overflow-hidden rounded-2xl sm:rounded-[26px] border border-line bg-surface/95 shadow-[0_25px_80px_rgba(0,0,0,0.10)] dark:shadow-[0_35px_110px_rgba(0,0,0,0.65)] ring-1 ring-foreground/[0.04] transition-all backdrop-blur-xl flex flex-col"
         initial={{ opacity: 0, y: 22 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
@@ -242,7 +242,7 @@ export function ProductPreview({ className }: { className?: string }) {
               <span className="font-semibold text-ink">app.orbix.cl</span>
               <span className="text-faint">/</span>
               <span className="capitalize font-mono text-[11px] text-muted">
-                {mode === "chat" ? `chat-orb` : activeTab}
+                {mode === "chat" ? "chat-orb" : activeTab}
               </span>
             </div>
           </div>
@@ -262,15 +262,15 @@ export function ProductPreview({ className }: { className?: string }) {
                 ? "w-12"
                 : mode === "chat"
                 ? "w-64 sm:w-72 md:w-80"
-                : "w-44 sm:w-48"
+                : "w-48 sm:w-52"
             )}
           >
             <div className="flex flex-col min-h-0 flex-1">
               {/* Brand Header */}
-              <div className="h-12 border-b border-sidebar-border flex items-center justify-between px-2 shrink-0">
+              <div className="h-12 border-b border-sidebar-border flex items-center justify-between px-2.5 shrink-0">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="size-8 flex items-center justify-center shrink-0">
-                    <Orb size={26} state={orbStatus} playful trackPointer={false} />
+                  <div className="size-7 flex items-center justify-center shrink-0">
+                    <Orb size={24} state={orbStatus} playful trackPointer={false} />
                   </div>
                   {!collapsed && (
                     <div className="min-w-0 overflow-hidden">
@@ -370,8 +370,7 @@ export function ProductPreview({ className }: { className?: string }) {
               {mode === "chat" && !collapsed ? (
                 /* LIVE ORB CHAT CONVERSATION INSIDE SIDEBAR */
                 <div className="flex flex-col flex-1 min-h-0 justify-between">
-
-                  {/* Conversation Messages Thread (Scoped Scrollable div, NEVER scrolls the page) */}
+                  {/* Conversation Messages Thread */}
                   <div ref={chatScrollerRef} className="flex-1 overflow-y-auto p-2.5 space-y-2.5 min-h-0 text-xs">
                     {messages.map((msg) => (
                       <div
@@ -452,74 +451,84 @@ export function ProductPreview({ className }: { className?: string }) {
               ) : (
                 /* STANDARD PLATFORM NAVIGATION INSIDE SIDEBAR */
                 <div className="flex flex-col flex-1 min-h-0 justify-between">
-                  <div>
-                    {/* Search Fake Bar */}
+                  {/* Scrollable Navigation Groups */}
+                  <div className="flex-1 overflow-y-auto p-1.5 space-y-2 min-h-0">
+                    {/* Search Bar */}
                     {!collapsed && (
-                      <div className="px-2 pt-2">
-                        <div className="h-7 px-2 rounded-lg border border-sidebar-border bg-sidebar-accent/50 flex items-center justify-between text-[10.5px] text-muted-foreground select-none">
+                      <div className="px-1 pt-0.5 pb-1">
+                        <div className="h-7 px-2 rounded-lg border border-sidebar-border bg-sidebar-accent/40 flex items-center justify-between text-[10.5px] text-muted-foreground select-none">
                           <span className="flex items-center gap-1.5"><Search size={11} /> Buscar</span>
                           <span className="text-[9px] font-mono">Ctrl K</span>
                         </div>
                       </div>
                     )}
 
-                    {/* Navigation Groups matching real Sidebar.tsx */}
-                    <div className="p-1.5 space-y-1.5 overflow-y-auto">
-                      {GROUPS.map((group) => (
-                        <div key={group.label} className="space-y-0.5">
-                          {!collapsed && (
-                            <p className="px-2 pt-1 pb-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                              {group.label}
-                            </p>
-                          )}
-                          {group.items.map((item) => {
-                            const Icon = item.icon;
-                            const isActive = activeTab === item.id;
-                            return (
-                              <button
-                                key={item.label}
-                                type="button"
-                                onClick={() => setActiveTab(item.id)}
-                                title={collapsed ? item.label : undefined}
-                                className={cn(
-                                  "h-8 w-full flex items-center rounded-lg text-xs font-medium transition-colors cursor-pointer",
-                                  collapsed ? "justify-center px-0" : "px-1.5 gap-2",
-                                  isActive
-                                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-2xs"
-                                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                                )}
-                              >
-                                <div className="size-6 flex items-center justify-center shrink-0">
-                                  <Icon size={14} />
-                                </div>
-                                {!collapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
-                                {!collapsed && item.badge && (
-                                  <span
-                                    className={cn(
-                                      "px-1.5 py-0.2 rounded-full text-[9px] font-semibold",
-                                      isActive ? "bg-foreground/10 text-foreground" : "bg-sidebar-accent text-muted-foreground"
-                                    )}
-                                  >
-                                    {item.badge}
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      ))}
-                    </div>
+                    {GROUPS.map((group) => (
+                      <div key={group.label} className="space-y-0.5">
+                        {!collapsed && (
+                          <p className="px-2 pt-1 pb-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                            {group.label}
+                          </p>
+                        )}
+                        {group.items.map((item) => {
+                          const Icon = item.icon;
+                          const isActive = activeTab === item.id;
+                          return (
+                            <button
+                              key={item.label}
+                              type="button"
+                              onClick={() => setActiveTab(item.id)}
+                              title={collapsed ? item.label : undefined}
+                              className={cn(
+                                "h-7.5 w-full flex items-center rounded-lg text-xs font-medium transition-colors cursor-pointer",
+                                collapsed ? "justify-center px-0" : "px-2 gap-2",
+                                isActive
+                                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-2xs"
+                                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                              )}
+                            >
+                              <div className="size-5 flex items-center justify-center shrink-0">
+                                <Icon size={14} />
+                              </div>
+                              {!collapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
+                              {!collapsed && item.badge && (
+                                <span
+                                  className={cn(
+                                    "px-1.5 py-0.2 rounded-full text-[9px] font-semibold",
+                                    isActive ? "bg-foreground/10 text-foreground" : "bg-sidebar-accent text-muted-foreground"
+                                  )}
+                                >
+                                  {item.badge}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ))}
                   </div>
 
-                  {/* Sidebar User Footer */}
-                  <div className="p-1.5 border-t border-sidebar-border">
+                  {/* Sidebar Footer with Notifications & User Profile */}
+                  <div className="p-1.5 border-t border-sidebar-border space-y-1 shrink-0">
+                    {!collapsed && (
+                      <div className="h-7 w-full flex items-center justify-between px-2 rounded-lg text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 cursor-pointer transition-colors">
+                        <div className="flex items-center gap-2">
+                          <Bell size={13} />
+                          <span className="text-[11px] font-medium">Avisos</span>
+                        </div>
+                        <span className="px-1.5 py-0.2 rounded-full bg-foreground/10 text-[9px] font-semibold text-foreground">
+                          3
+                        </span>
+                      </div>
+                    )}
+
                     <div
                       className={cn(
-                        "h-8.5 w-full flex items-center rounded-lg p-1 text-xs",
+                        "h-9 w-full flex items-center rounded-lg p-1 text-xs hover:bg-sidebar-accent/40 cursor-pointer transition-colors",
                         collapsed ? "justify-center px-0" : "gap-2 px-1.5"
                       )}
                     >
-                      <div className="size-6 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-white font-bold flex items-center justify-center text-[10px] shadow-xs shrink-0">
+                      <div className="size-6 rounded-full bg-rose-600 text-white font-bold flex items-center justify-center text-[10px] shadow-xs shrink-0">
                         CS
                       </div>
                       {!collapsed && (
@@ -536,56 +545,49 @@ export function ProductPreview({ className }: { className?: string }) {
           </aside>
 
           {/* MAIN PLATFORM WORKSPACE */}
-          <main className="flex flex-col justify-between p-3.5 sm:p-4.5 overflow-hidden bg-background min-h-0">
-            {/* View Header */}
+          <main className="flex flex-col justify-between p-3 sm:p-4 overflow-hidden bg-background min-h-0">
+            {/* Real Platform Header */}
             <div className="flex items-center justify-between pb-2.5 border-b border-line gap-2 shrink-0">
               <div>
-                <h4 className="text-sm font-bold tracking-tight text-ink flex items-center gap-2">
-                  {activeTab === "dashboard" && "Dashboard General"}
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted">
+                  {activeTab === "dashboard" ? "Hoy" : "Comercial & Nómina"}
+                </p>
+                <h3 className="text-sm sm:text-base font-bold tracking-tight text-ink flex items-center gap-2">
+                  {activeTab === "dashboard" && "Andes Tecnología SpA"}
                   {activeTab === "facturacion" && "Facturación Electrónica DTE"}
                   {activeTab === "cobranza" && "Cobranza Activa"}
                   {activeTab === "sueldos" && "Nómina y Liquidaciones"}
                   {activeTab === "caja" && "Conciliación Bancaria"}
-                </h4>
-                <p className="text-[10px] text-muted hidden sm:block">
-                  Andes Tecnología SpA · RUT 76.849.200-1 · Agosto 2026
-                </p>
+                  {activeTab === "empresas" && "Empresas y RUTs"}
+                  {activeTab === "reportes" && "Reportes Financieros"}
+                  {activeTab === "configuracion" && "Configuración de la Empresa"}
+                </h3>
               </div>
 
               <div className="flex items-center gap-1.5">
-                {mode === "platform" ? (
-                  <button
-                    type="button"
-                    onClick={() => setMode("chat")}
-                    className="h-6.5 px-2.5 rounded-lg border border-line bg-surface text-secondary hover:text-ink text-[10.5px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <MessageSquare size={11} />
-                    <span>Abrir Chat con Orb</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setMode("platform")}
-                    className="h-6.5 px-2.5 rounded-lg border border-line bg-surface text-secondary hover:text-ink text-[10.5px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <LayoutDashboard size={11} />
-                    <span>Ver Menú</span>
-                  </button>
-                )}
                 <button
                   type="button"
-                  className="h-6.5 px-2.5 rounded-lg bg-foreground text-background text-[11px] font-semibold flex items-center gap-1 hover:opacity-90 transition-all shadow-xs cursor-pointer"
+                  onClick={() => setActiveTab("facturacion")}
+                  className="h-7 px-2.5 rounded-lg bg-foreground text-background text-[11px] font-semibold flex items-center gap-1 hover:opacity-90 transition-all shadow-xs cursor-pointer"
                 >
-                  <Plus size={12} />
-                  <span className="hidden sm:inline">Nuevo</span>
+                  <FilePlus size={12} />
+                  <span className="hidden sm:inline">Nueva factura</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("sueldos")}
+                  className="h-7 px-2.5 rounded-lg border border-line bg-surface text-secondary hover:text-ink text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <Wallet size={12} />
+                  <span className="hidden sm:inline">Cerrar agosto</span>
                 </button>
               </div>
             </div>
 
             {/* Scrollable View Content */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden pt-2.5 pr-0.5 min-h-0">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden pt-2.5 pr-0.5 min-h-0 space-y-3">
               <AnimatePresence mode="wait">
-                {/* TAB 1: DASHBOARD */}
+                {/* TAB 1: REAL PLATFORM DASHBOARD */}
                 {activeTab === "dashboard" && (
                   <motion.div
                     key="dash"
@@ -593,60 +595,126 @@ export function ProductPreview({ className }: { className?: string }) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.18 }}
-                    className="space-y-2.5"
+                    className="space-y-3"
                   >
-                    <div className="grid grid-cols-3 gap-2">
+                    {/* Top 4 Metrics */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                       <div className="rounded-xl border border-line bg-surface p-2.5">
-                        <p className="text-[9.5px] font-bold text-muted uppercase">Ingresos Mes</p>
-                        <p className="font-mono text-[14px] font-bold text-ink mt-0.5">$24.850.000</p>
-                        <span className="text-[9.5px] font-semibold text-emerald-500">↑ 18.2% vs julio</span>
+                        <p className="text-[9.5px] font-bold text-muted uppercase">Caja neta</p>
+                        <p className="font-mono text-[13.5px] font-bold text-ink mt-0.5">$14.280.000</p>
+                        <span className="text-[9px] text-muted">8 movimientos</span>
                       </div>
                       <div className="rounded-xl border border-line bg-surface p-2.5">
-                        <p className="text-[9.5px] font-bold text-muted uppercase">Por Cobrar</p>
-                        <p className="font-mono text-[14px] font-bold text-amber-500 mt-0.5">$9.049.950</p>
-                        <span className="text-[9.5px] text-muted">3 DTEs pendientes</span>
+                        <p className="text-[9.5px] font-bold text-muted uppercase">Ingresos cobrados</p>
+                        <p className="font-mono text-[13.5px] font-bold text-ink mt-0.5">$24.850.000</p>
+                        <span className="text-[9px] font-semibold text-emerald-500">12 DTEs pagados</span>
                       </div>
                       <div className="rounded-xl border border-line bg-surface p-2.5">
-                        <p className="text-[9.5px] font-bold text-muted uppercase">Nómina Previred</p>
-                        <p className="font-mono text-[14px] font-bold text-ink mt-0.5">$6.820.000</p>
-                        <span className="text-[9.5px] text-emerald-500 font-semibold">✓ 6 fichas listas</span>
+                        <p className="text-[9.5px] font-bold text-muted uppercase">Por cobrar</p>
+                        <p className="font-mono text-[13.5px] font-bold text-amber-500 mt-0.5">$9.049.950</p>
+                        <span className="text-[9px] text-muted">3 pendientes</span>
+                      </div>
+                      <div className="rounded-xl border border-line bg-surface p-2.5">
+                        <p className="text-[9.5px] font-bold text-muted uppercase">Nómina estimada</p>
+                        <p className="font-mono text-[13.5px] font-bold text-ink mt-0.5">$6.820.000</p>
+                        <span className="text-[9px] text-emerald-500 font-semibold">6 liquidaciones</span>
                       </div>
                     </div>
 
-                    {/* Interactive Task List */}
-                    <div className="rounded-xl border border-line bg-surface p-2.5 space-y-1.5">
-                      <div className="flex items-center justify-between text-[10.5px]">
-                        <span className="font-bold text-ink">Cierre Operativo de Agosto</span>
-                        <span className="text-muted font-mono">{tasks.filter((t) => t.done).length}/{tasks.length} Listas</span>
-                      </div>
-                      <div className="space-y-1">
-                        {tasks.map((task) => (
-                          <div
-                            key={task.id}
-                            onClick={() => toggleTask(task.id)}
-                            className={cn(
-                              "p-1.5 rounded-lg border text-xs flex items-center justify-between cursor-pointer transition-colors",
-                              task.done ? "border-line bg-foreground/[0.02] opacity-60" : "border-line bg-surface hover:bg-foreground/[0.02]"
-                            )}
-                          >
-                            <div className="flex items-center gap-2">
-                              <div
-                                className={cn(
-                                  "size-4 rounded border flex items-center justify-center",
-                                  task.done ? "border-emerald-500 bg-emerald-500 text-white" : "border-line"
-                                )}
-                              >
-                                {task.done && <Check size={10} strokeWidth={3} />}
+                    {/* Two Columns: Inbox de Trabajo + Aging de Cobranza */}
+                    <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-2.5 items-start">
+                      {/* Left: Inbox de Trabajo with Urgency Tags */}
+                      <div className="rounded-xl border border-line bg-surface p-3 space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <div>
+                            <h4 className="font-bold text-ink text-[11.5px]">Inbox de trabajo</h4>
+                            <p className="text-[9.5px] text-muted font-mono">{tasks.filter((t) => !t.done).length} pendientes de acción</p>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-md bg-foreground/5 text-muted text-[10px] font-medium">Agosto 2026</span>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          {tasks.map((task) => (
+                            <div
+                              key={task.id}
+                              onClick={() => toggleTask(task.id)}
+                              className={cn(
+                                "p-2 rounded-lg border text-xs flex items-center justify-between cursor-pointer transition-colors border-l-[3px]",
+                                task.urgency === "critical" && "border-l-red-500",
+                                task.urgency === "warn" && "border-l-amber-500",
+                                task.urgency === "info" && "border-l-foreground/40",
+                                task.done ? "border-line bg-foreground/[0.02] opacity-60" : "border-line bg-background hover:bg-foreground/[0.02]"
+                              )}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div
+                                  className={cn(
+                                    "size-3.5 rounded border flex items-center justify-center shrink-0",
+                                    task.done ? "border-emerald-500 bg-emerald-500 text-white" : "border-line"
+                                  )}
+                                >
+                                  {task.done && <Check size={9} strokeWidth={3} />}
+                                </div>
+                                <span className={cn("text-[11px] truncate", task.done && "line-through text-muted")}>
+                                  {task.text}
+                                </span>
                               </div>
-                              <span className={cn("text-[11px]", task.done && "line-through text-muted")}>
-                                {task.text}
+                              <span className="text-[8.5px] font-mono px-1.5 py-0.2 rounded bg-foreground/[0.05] text-muted shrink-0">
+                                {task.tag}
                               </span>
                             </div>
-                            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-foreground/[0.05] text-muted">
-                              {task.tag}
-                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Right: Aging de Cobranza Bar & Top Deudores */}
+                      <div className="space-y-2.5">
+                        <div className="rounded-xl border border-line bg-surface p-3 space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <h4 className="font-bold text-ink text-[11.5px]">Aging de cobranza</h4>
+                            <span className="text-[10px] text-muted">Total $9.049.950</span>
                           </div>
-                        ))}
+
+                          {/* Multi-color Aging Bar */}
+                          <div className="flex h-2.5 overflow-hidden rounded-full bg-foreground/10 gap-0.5">
+                            <div className="h-full bg-foreground rounded-l-full" style={{ width: "45%" }} title="Al día" />
+                            <div className="h-full bg-amber-500" style={{ width: "25%" }} title="1-30 días" />
+                            <div className="h-full bg-orange-500" style={{ width: "18%" }} title="31-60 días" />
+                            <div className="h-full bg-red-500 rounded-r-full" style={{ width: "12%" }} title="+90 días" />
+                          </div>
+
+                          <div className="grid grid-cols-4 gap-1 text-center text-[9px] pt-1">
+                            <div>
+                              <p className="text-muted font-bold">AL DÍA</p>
+                              <p className="font-mono font-bold text-ink">1 DTE</p>
+                            </div>
+                            <div>
+                              <p className="text-amber-500 font-bold">30 DÍAS</p>
+                              <p className="font-mono font-bold text-ink">1 DTE</p>
+                            </div>
+                            <div>
+                              <p className="text-orange-500 font-bold">60 DÍAS</p>
+                              <p className="font-mono font-bold text-ink">1 DTE</p>
+                            </div>
+                            <div>
+                              <p className="text-red-500 font-bold">+90 DÍAS</p>
+                              <p className="font-mono font-bold text-ink">0 DTE</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Top Deudores Mini Card */}
+                        <div className="rounded-xl border border-line bg-surface p-2.5 text-xs space-y-1.5">
+                          <p className="text-[10px] font-bold uppercase text-muted">Top Deudores</p>
+                          <div className="flex items-center justify-between text-[10.5px]">
+                            <span className="truncate">Constructora Río Claro</span>
+                            <span className="font-mono font-bold text-amber-500">$3.450.000</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[10.5px]">
+                            <span className="truncate">Colegio Los Alerces</span>
+                            <span className="font-mono font-bold text-ink">$1.240.000</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </motion.div>
@@ -801,6 +869,64 @@ export function ProductPreview({ className }: { className?: string }) {
                         <span>Previred (Nómina Julio)</span>
                         <span className="font-mono font-bold text-muted">-$2.450.000</span>
                       </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* TAB 5: EMPRESAS */}
+                {activeTab === "empresas" && (
+                  <motion.div
+                    key="empresas"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.18 }}
+                    className="space-y-2"
+                  >
+                    <div className="p-3 rounded-xl border border-line bg-surface space-y-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-ink text-[12px]">Andes Tecnología SpA</p>
+                          <p className="text-[10px] text-muted font-mono">RUT 76.849.200-1 · Principal</p>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 font-bold text-[9px]">
+                          Activa
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* TAB 6: REPORTES */}
+                {activeTab === "reportes" && (
+                  <motion.div
+                    key="reportes"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.18 }}
+                    className="space-y-2"
+                  >
+                    <div className="p-3 rounded-xl border border-line bg-surface space-y-2 text-xs">
+                      <p className="font-bold text-ink text-[12px]">Balance y Estado de Resultados</p>
+                      <p className="text-[10px] text-muted">Margen Operacional: 42.8% · EBITDA: $18.420.000</p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* TAB 7: CONFIGURACION */}
+                {activeTab === "configuracion" && (
+                  <motion.div
+                    key="configuracion"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.18 }}
+                    className="space-y-2"
+                  >
+                    <div className="p-3 rounded-xl border border-line bg-surface space-y-2 text-xs">
+                      <p className="font-bold text-ink text-[12px]">Certificado Digital & API SII</p>
+                      <p className="text-[10px] text-muted font-mono">CAF Vigente · Firma Activa · Ambiente Producción</p>
                     </div>
                   </motion.div>
                 )}
