@@ -34,6 +34,7 @@ type AuthValue = {
   session: Session | null;
   workspace: Workspace | null;
   login: (email: string, password: string) => Promise<AuthResult>;
+  loginWithGoogle: () => Promise<AuthResult>;
   register: (name: string, email: string, password: string, companyName: string) => Promise<AuthResult>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<AuthResult>;
@@ -129,6 +130,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { ok: false, error: translateAuthError(err instanceof Error ? err.message : String(err)) };
     }
   }, [hydrate]);
+
+  const loginWithGoogle = useCallback<AuthValue["loginWithGoogle"]>(async () => {
+    const supabase = tryCreateClient();
+    if (!supabase) {
+      return { ok: false, error: translateAuthError("Supabase no está configurado") };
+    }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${getSiteUrl()}/auth/callback?next=/dashboard`,
+      },
+    });
+    if (error) return { ok: false, error: translateAuthError(error.message) };
+    return { ok: true };
+  }, []);
 
   const register = useCallback<AuthValue["register"]>(async (name, email, password, companyName) => {
     if (!name.trim() || !email.trim() || !companyName.trim()) {
@@ -330,6 +346,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       workspace,
       login,
+      loginWithGoogle,
       register,
       logout,
       resetPassword,
@@ -348,6 +365,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       workspace,
       login,
+      loginWithGoogle,
       register,
       logout,
       resetPassword,

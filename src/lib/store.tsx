@@ -104,6 +104,7 @@ type StoreValue = {
   toasts: Toast[];
   dismissToast: (id: string) => void;
   login: (email: string, password: string) => Promise<AuthResult>;
+  loginWithGoogle: () => Promise<AuthResult>;
   register: (
     name: string,
     email: string,
@@ -230,6 +231,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     [auth, pushToast],
   );
+
+  const loginWithGoogle: StoreValue["loginWithGoogle"] = useCallback(async () => {
+    return auth.loginWithGoogle();
+  }, [auth]);
 
   const register: StoreValue["register"] = useCallback(
     async (name, email, password, companyName) => {
@@ -808,6 +813,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       toasts,
       dismissToast,
       login,
+      loginWithGoogle,
       register,
       logout,
       resetPassword,
@@ -851,6 +857,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       toasts,
       dismissToast,
       login,
+      loginWithGoogle,
       register,
       logout,
       resetPassword,
