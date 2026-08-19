@@ -230,32 +230,32 @@ export function ProductPreview({ className }: { className?: string }) {
         </div>
 
         {/* Inner App Shell (Sidebar + Main App Content) */}
-        <div className="grid grid-cols-[auto_1fr] flex-1 min-h-0 text-ink bg-base overflow-hidden">
+        <div className="grid grid-cols-[auto_1fr] flex-1 min-h-0 text-ink bg-background overflow-hidden">
           {/* Collapsible Sidebar */}
           <aside
             className={cn(
-              "border-r border-line bg-surface/60 flex flex-col justify-between transition-[width] duration-200 select-none overflow-hidden shrink-0",
+              "border-r border-sidebar-border bg-sidebar flex flex-col justify-between transition-[width] duration-200 select-none overflow-hidden shrink-0",
               collapsed ? "w-12" : "w-44 sm:w-48"
             )}
           >
             <div className="flex flex-col min-h-0">
               {/* Brand Header */}
-              <div className="h-12 border-b border-line flex items-center justify-between px-2">
+              <div className="h-12 border-b border-sidebar-border flex items-center justify-between px-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="size-8 flex items-center justify-center shrink-0">
                     <Orb size={26} state={orbStatus} playful trackPointer={false} />
                   </div>
                   {!collapsed && (
                     <div className="min-w-0 overflow-hidden">
-                      <p className="truncate text-xs font-bold tracking-tight text-ink">Orbix</p>
-                      <p className="truncate text-[10px] text-muted font-medium">Andes SpA</p>
+                      <p className="truncate text-xs font-bold tracking-tight text-sidebar-foreground">Orbix</p>
+                      <p className="truncate text-[10px] text-muted-foreground font-medium">Andes SpA</p>
                     </div>
                   )}
                 </div>
                 {!collapsed && (
                   <button
                     onClick={() => setCollapsed(true)}
-                    className="size-7 flex items-center justify-center rounded-md text-muted hover:text-ink hover:bg-foreground/[0.05] transition-colors shrink-0"
+                    className="size-7 flex items-center justify-center rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors shrink-0"
                     title="Contraer menú lateral"
                   >
                     <PanelLeft size={13} />
@@ -265,10 +265,10 @@ export function ProductPreview({ className }: { className?: string }) {
 
               {/* Collapsed Expand Button */}
               {collapsed && (
-                <div className="p-1 flex justify-center border-b border-line">
+                <div className="p-1 flex justify-center border-b border-sidebar-border">
                   <button
                     onClick={() => setCollapsed(false)}
-                    className="size-7 flex items-center justify-center rounded-md text-muted hover:text-ink hover:bg-foreground/[0.05] transition-colors"
+                    className="size-7 flex items-center justify-center rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
                     title="Expandir menú lateral"
                   >
                     <PanelLeft size={13} />
@@ -278,15 +278,15 @@ export function ProductPreview({ className }: { className?: string }) {
 
               {/* Mode Switch (Plataforma vs Orb Chat) */}
               {!collapsed ? (
-                <div className="p-2 border-b border-line">
-                  <div className="grid grid-cols-2 p-0.5 rounded-lg border border-line bg-surface text-[10.5px] font-semibold">
+                <div className="p-2 border-b border-sidebar-border">
+                  <div className="grid grid-cols-2 p-0.5 rounded-md border border-sidebar-border bg-sidebar text-[10.5px] font-medium">
                     <button
                       onClick={() => setMode("platform")}
                       className={cn(
-                        "py-1 rounded-md transition-all flex items-center justify-center gap-1 cursor-pointer",
+                        "py-1 rounded-[5px] transition-all flex items-center justify-center gap-1 cursor-pointer",
                         mode === "platform"
-                          ? "bg-foreground text-background shadow-xs font-bold"
-                          : "text-secondary hover:text-ink"
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-2xs"
+                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
                       )}
                     >
                       <LayoutDashboard size={11} /> Plataforma
@@ -294,10 +294,10 @@ export function ProductPreview({ className }: { className?: string }) {
                     <button
                       onClick={() => setMode("chat")}
                       className={cn(
-                        "py-1 rounded-md transition-all flex items-center justify-center gap-1 cursor-pointer",
+                        "py-1 rounded-[5px] transition-all flex items-center justify-center gap-1 cursor-pointer",
                         mode === "chat"
-                          ? "bg-foreground text-background shadow-xs font-bold"
-                          : "text-secondary hover:text-ink"
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-2xs"
+                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
                       )}
                     >
                       <MessageSquare size={11} /> Orb AI
@@ -305,7 +305,7 @@ export function ProductPreview({ className }: { className?: string }) {
                   </div>
                 </div>
               ) : (
-                <div className="p-1 border-b border-line flex flex-col gap-1 items-center">
+                <div className="p-1 border-b border-sidebar-border flex flex-col gap-1 items-center">
                   <button
                     onClick={() => {
                       setCollapsed(false);
@@ -314,7 +314,7 @@ export function ProductPreview({ className }: { className?: string }) {
                     title="Plataforma"
                     className={cn(
                       "size-7 rounded-md flex items-center justify-center transition-colors",
-                      mode === "platform" ? "bg-foreground text-background" : "text-muted hover:text-ink"
+                      mode === "platform" ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
                     )}
                   >
                     <LayoutDashboard size={13} />
@@ -327,7 +327,7 @@ export function ProductPreview({ className }: { className?: string }) {
                     title="Orb Chat"
                     className={cn(
                       "size-7 rounded-md flex items-center justify-center transition-colors",
-                      mode === "chat" ? "bg-foreground text-background" : "text-muted hover:text-ink"
+                      mode === "chat" ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
                     )}
                   >
                     <MessageSquare size={13} />
@@ -338,7 +338,7 @@ export function ProductPreview({ className }: { className?: string }) {
               {/* Search Fake Bar (matching real sidebar) */}
               {!collapsed && (
                 <div className="px-2 pt-2">
-                  <div className="h-7 px-2 rounded-lg border border-line bg-foreground/[0.02] flex items-center justify-between text-[10.5px] text-muted select-none">
+                  <div className="h-7 px-2 rounded-lg border border-sidebar-border bg-sidebar-accent/50 flex items-center justify-between text-[10.5px] text-muted-foreground select-none">
                     <span className="flex items-center gap-1.5"><Search size={11} /> Buscar</span>
                     <span className="text-[9px] font-mono">Ctrl K</span>
                   </div>
@@ -348,7 +348,7 @@ export function ProductPreview({ className }: { className?: string }) {
               {/* Navigation Items */}
               <div className="p-1.5 space-y-0.5 overflow-y-auto">
                 {!collapsed && (
-                  <p className="px-2 pt-1.5 pb-0.5 text-[9px] font-bold uppercase tracking-wider text-muted">
+                  <p className="px-2 pt-1.5 pb-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
                     Comercial & Nómina
                   </p>
                 )}
@@ -367,8 +367,8 @@ export function ProductPreview({ className }: { className?: string }) {
                         "h-8.5 w-full flex items-center rounded-lg text-xs font-medium transition-colors cursor-pointer",
                         collapsed ? "justify-center px-0" : "px-1.5 gap-2",
                         isActive
-                          ? "bg-foreground text-background font-semibold shadow-xs"
-                          : "text-secondary hover:text-ink hover:bg-foreground/[0.04]"
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-2xs"
+                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                       )}
                     >
                       <div className="size-7 flex items-center justify-center shrink-0">
@@ -379,7 +379,7 @@ export function ProductPreview({ className }: { className?: string }) {
                         <span
                           className={cn(
                             "px-1.5 py-0.2 rounded-full text-[9px] font-semibold",
-                            isActive ? "bg-background/20 text-background" : "bg-foreground/[0.06] text-muted"
+                            isActive ? "bg-foreground/10 text-foreground" : "bg-sidebar-accent text-muted-foreground"
                           )}
                         >
                           {item.badge}
@@ -390,10 +390,10 @@ export function ProductPreview({ className }: { className?: string }) {
                 })}
 
                 {/* Divider */}
-                <div className="border-t border-line my-1.5" />
+                <div className="border-t border-sidebar-border my-1.5" />
 
                 {!collapsed && (
-                  <p className="px-2 pt-1 pb-0.5 text-[9px] font-bold uppercase tracking-wider text-muted">
+                  <p className="px-2 pt-1 pb-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
                     Estudio & Ajustes
                   </p>
                 )}
@@ -404,7 +404,7 @@ export function ProductPreview({ className }: { className?: string }) {
                       key={item.label}
                       title={collapsed ? item.label : undefined}
                       className={cn(
-                        "h-8 w-full flex items-center rounded-lg text-xs text-muted hover:text-secondary hover:bg-foreground/[0.03] transition-colors cursor-pointer",
+                        "h-8 w-full flex items-center rounded-lg text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/40 transition-colors cursor-pointer",
                         collapsed ? "justify-center px-0" : "px-1.5 gap-2"
                       )}
                     >
@@ -419,7 +419,7 @@ export function ProductPreview({ className }: { className?: string }) {
             </div>
 
             {/* Sidebar User Footer */}
-            <div className="p-1.5 border-t border-line space-y-1">
+            <div className="p-1.5 border-t border-sidebar-border space-y-1">
               <div
                 className={cn(
                   "h-8.5 w-full flex items-center rounded-lg p-1 text-xs",
@@ -431,16 +431,16 @@ export function ProductPreview({ className }: { className?: string }) {
                 </div>
                 {!collapsed && (
                   <div className="min-w-0 flex-1 overflow-hidden">
-                    <p className="truncate text-[11px] font-semibold text-ink leading-tight">Camila Soto</p>
-                    <p className="truncate text-[9px] text-muted leading-tight">Andes SpA · Admin</p>
+                    <p className="truncate text-[11px] font-semibold text-sidebar-foreground leading-tight">Camila Soto</p>
+                    <p className="truncate text-[9px] text-muted-foreground leading-tight">Andes SpA · Admin</p>
                   </div>
                 )}
               </div>
             </div>
           </aside>
 
-          {/* Main App Content View (Switches between Platform views and Interactive Orb Chat) */}
-          <main className="flex flex-col justify-between p-3.5 sm:p-4.5 overflow-hidden bg-base min-h-0">
+          {/* Main App Content View */}
+          <main className="flex flex-col justify-between p-3.5 sm:p-4.5 overflow-hidden bg-background min-h-0">
             {mode === "chat" ? (
               /* LIVE INTERACTIVE ORB AI CHAT VIEW */
               <div className="flex-1 flex flex-col justify-between min-h-0">
