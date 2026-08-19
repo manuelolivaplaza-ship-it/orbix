@@ -9,6 +9,7 @@ import { IntegrationsBar } from "@/components/landing/IntegrationsBar";
 import { BentoFeatures } from "@/components/landing/BentoFeatures";
 import { AiShowcase } from "@/components/landing/AiShowcase";
 import { FaqSection } from "@/components/landing/FaqSection";
+import { Footer } from "@/components/landing/Footer";
 import { LandingCurtain, Reveal, RevealLine, RevealOnScroll } from "@/components/landing/Reveal";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -323,47 +324,8 @@ export default function LandingPage() {
         </RevealOnScroll>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-line py-16 bg-surface/30">
-        <div className="mx-auto grid max-w-[1400px] gap-10 px-4 sm:px-6 lg:px-8 md:grid-cols-5">
-          <div className="md:col-span-2 space-y-3">
-            <div className="flex items-center gap-2.5">
-              <Orb size={26} state="idle" trackPointer={false} />
-              <span className="text-base font-bold tracking-tight text-ink">Orbix</span>
-            </div>
-            <p className="text-xs text-secondary max-w-sm leading-relaxed">
-              La plataforma de gestión financiera, facturación DTE, nómina Previred y conciliación bancaria con inteligencia artificial para empresas en Chile.
-            </p>
-            <p className="text-[11px] text-muted">Santiago de Chile · © {new Date().getFullYear()} Orbix SpA.</p>
-          </div>
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted mb-3">Producto</p>
-            <ul className="space-y-2 text-xs text-secondary">
-              <li><a href="#producto" className="hover:text-ink transition-colors">Facturación DTE</a></li>
-              <li><a href="#producto" className="hover:text-ink transition-colors">Nómina & Previred</a></li>
-              <li><a href="#producto" className="hover:text-ink transition-colors">Conciliación Bancaria</a></li>
-              <li><a href="#asistente" className="hover:text-ink transition-colors">Orb Asistente IA</a></li>
-            </ul>
-          </div>
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted mb-3">Plataforma</p>
-            <ul className="space-y-2 text-xs text-secondary">
-              <li><a href="#producto" className="hover:text-ink transition-colors">Ecosistema SII & Bancos</a></li>
-              <li><a href="#asistente" className="hover:text-ink transition-colors">Agente Orb IA</a></li>
-              <li><a href="#precios" className="hover:text-ink transition-colors">Planes y Precios</a></li>
-              <li><a href="#faq" className="hover:text-ink transition-colors">Preguntas Frecuentes</a></li>
-            </ul>
-          </div>
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted mb-3">Acceso</p>
-            <ul className="space-y-2 text-xs text-secondary">
-              <li><Link href="/login" className="hover:text-ink transition-colors">Iniciar sesión</Link></li>
-              <li><Link href="/register" className="hover:text-ink transition-colors">Registrar empresa</Link></li>
-              <li><a href="mailto:hola@orbix.cl" className="hover:text-ink transition-colors">hola@orbix.cl</a></li>
-            </ul>
-          </div>
-        </div>
-      </footer>
+      {/* Minimalist SpaceX / x.ai inspired Orbital Footer */}
+      <Footer />
     </div>
   );
 }
