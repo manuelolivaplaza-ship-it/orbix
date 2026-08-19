@@ -131,7 +131,7 @@ export default function LandingPage() {
             : "border-b border-transparent bg-transparent backdrop-blur-none"
         )}
       >
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 sm:px-8 transition-all">
+        <div className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-4 sm:px-6 lg:px-8 transition-all">
           <Link href="/" className="flex items-center gap-3 group">
             <Orb size={38} state="idle" playful className="transition-transform group-hover:scale-105" />
             <span className="text-lg font-semibold tracking-tight">Orbix</span>
@@ -165,7 +165,7 @@ export default function LandingPage() {
       </header>
 
       <section className="relative overflow-hidden">
-        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 px-6 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-12 lg:py-24 xl:gap-16">
+        <div className="relative z-10 mx-auto grid max-w-[1400px] items-center gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)] lg:gap-10 lg:py-24 xl:gap-14">
           <div className="min-w-0">
             <Reveal delay={0.22}>
               <p className="mb-6 text-xs font-medium uppercase tracking-[0.28em] text-muted">
