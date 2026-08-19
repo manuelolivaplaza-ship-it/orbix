@@ -46,6 +46,7 @@ type OrbProps = {
   trackPointer?: boolean;
   flourish?: boolean;
   playful?: boolean;
+  shadow?: boolean;
   hop?: boolean;
   intro?: boolean;
   className?: string;
@@ -59,6 +60,7 @@ export function Orb({
   trackPointer = true,
   flourish = false,
   playful = false,
+  shadow = false,
   hop = false,
   intro = false,
   className,
@@ -426,7 +428,7 @@ export function Orb({
         height={flourish ? size * 1.38 : size}
         overflow="visible"
       >
-        {playful && !flourish ? (
+        {shadow && !flourish ? (
           <ellipse data-orb="shadow" cx="50" cy="98" rx="22" ry="2.6" fill="#000" opacity="0.08" />
         ) : null}
 
