@@ -106,7 +106,7 @@ export default function LandingPage() {
             : "border-b border-transparent bg-transparent backdrop-blur-none"
         )}
       >
-        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-5 transition-all">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 sm:px-8 transition-all">
           <Link href="/" className="flex items-center gap-3 group">
             <Orb size={38} state="idle" playful className="transition-transform group-hover:scale-105" />
             <span className="text-lg font-semibold tracking-tight">Orbix</span>
@@ -140,52 +140,52 @@ export default function LandingPage() {
       </header>
 
       <section className="relative overflow-hidden">
-        <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 sm:py-20 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-8 lg:py-24 xl:gap-12">
+        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 px-6 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-12 lg:py-24 xl:gap-16">
           <div className="min-w-0">
             <Reveal delay={0.22}>
               <p className="mb-6 text-xs font-medium uppercase tracking-[0.28em] text-muted">
                 Early beta
               </p>
             </Reveal>
-            <h1 className="flex flex-nowrap items-center gap-x-2.5 whitespace-nowrap text-[1.65rem] font-semibold tracking-tight text-ink sm:gap-x-3.5 sm:text-4xl sm:leading-none lg:text-5xl">
+            <h1 className="flex flex-nowrap items-center gap-x-3 whitespace-nowrap text-[1.85rem] font-bold tracking-tight text-ink sm:gap-x-4 sm:text-5xl lg:text-[3.5rem] lg:leading-tight">
               <RevealLine delay={0.28} className="whitespace-nowrap">
                 Conoce a
               </RevealLine>
               <span className="landing-orb origin-center" style={{ animationDelay: "0.4s" }}>
                 <Orb
-                  size={66}
+                  size={76}
                   state="idle"
                   flourish
                   playful
                   hop
                   intro
                   label="Orb"
-                  className="origin-center scale-[0.85] translate-y-0.5 sm:scale-100 sm:translate-y-1 drop-shadow-sm cursor-pointer"
+                  className="origin-center scale-[0.88] translate-y-0.5 sm:scale-100 sm:translate-y-1 drop-shadow-md cursor-pointer"
                 />
               </span>
               <RevealLine delay={0.36}>Orbix</RevealLine>
             </h1>
             <Reveal delay={0.5}>
-              <p className="mt-8 max-w-xl text-lg leading-relaxed text-secondary">
+              <p className="mt-8 max-w-xl text-lg sm:text-xl leading-relaxed text-secondary">
                 Un compañero de trabajo al que le das operación real. Facturas, sueldos y
                 reportes — y vuelve cuando hay que firmar.
               </p>
             </Reveal>
             <Reveal delay={0.6}>
-              <div className="mt-10 flex flex-wrap gap-3">
+              <div className="mt-10 flex flex-wrap gap-3.5">
                 <Link href="/register">
-                  <Button size="lg" className="h-11 rounded-full px-6">
-                    Empezar
-                    <ArrowRight size={16} />
+                  <Button size="lg" className="h-12 rounded-full px-7 text-base font-medium shadow-md shadow-foreground/5 hover:scale-[1.02] transition-all">
+                    Empezar gratis
+                    <ArrowRight size={17} />
                   </Button>
                 </Link>
                 <Link href="/login">
-                  <Button size="lg" variant="secondary" className="h-11 rounded-full px-6">
+                  <Button size="lg" variant="secondary" className="h-12 rounded-full px-7 text-base font-medium hover:bg-foreground/[0.04] transition-all">
                     Ver el producto
                   </Button>
                 </Link>
               </div>
-              <p className="mt-5 text-xs text-faint">Crea tu cuenta. Sin usuarios de prueba.</p>
+              <p className="mt-5 text-xs text-faint">Crea tu cuenta en 1 minuto. Sin usuarios de prueba.</p>
             </Reveal>
           </div>
           <ProductPreview />

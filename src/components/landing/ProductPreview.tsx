@@ -59,55 +59,55 @@ export function ProductPreview({ className }: { className?: string }) {
       <div className="pointer-events-none absolute -inset-8 rounded-[48px] bg-gradient-to-tr from-amber-500/10 via-violet-500/10 to-sky-500/10 blur-3xl opacity-70" />
 
       <motion.div
-        className="relative overflow-hidden rounded-2xl sm:rounded-[24px] border border-line bg-surface shadow-[0_24px_70px_rgba(0,0,0,0.08)] dark:shadow-[0_30px_90px_rgba(0,0,0,0.5)] transition-all"
+        className="relative overflow-hidden rounded-2xl sm:rounded-[26px] border border-line bg-surface shadow-[0_24px_70px_rgba(0,0,0,0.09)] dark:shadow-[0_32px_100px_rgba(0,0,0,0.55)] transition-all"
         initial={{ opacity: 0, y: 22 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
       >
         {/* Window Chrome / Titlebar */}
-        <div className="flex h-10 items-center justify-between border-b border-line bg-base/80 px-3.5 backdrop-blur-md select-none">
+        <div className="flex h-11 items-center justify-between border-b border-line bg-base/80 px-4 backdrop-blur-md select-none">
           <div className="flex items-center gap-2">
             <div className="flex gap-1.5">
-              <i className="h-2.5 w-2.5 rounded-full bg-red-400/80 hover:opacity-100 transition-opacity" />
-              <i className="h-2.5 w-2.5 rounded-full bg-amber-400/80 hover:opacity-100 transition-opacity" />
-              <i className="h-2.5 w-2.5 rounded-full bg-emerald-400/80 hover:opacity-100 transition-opacity" />
+              <i className="h-3 w-3 rounded-full bg-red-400/80 hover:opacity-100 transition-opacity" />
+              <i className="h-3 w-3 rounded-full bg-amber-400/80 hover:opacity-100 transition-opacity" />
+              <i className="h-3 w-3 rounded-full bg-emerald-400/80 hover:opacity-100 transition-opacity" />
             </div>
-            <div className="ml-3 hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-secondary">
-              <span className="text-ink">app.orbix.cl</span>
+            <div className="ml-3 hidden sm:flex items-center gap-1.5 text-xs font-medium text-secondary">
+              <span className="text-ink font-semibold">app.orbix.cl</span>
               <span className="text-faint">/</span>
               <span className="capitalize">{activeTab}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-[10px]">
-            <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-line bg-foreground/[0.03] px-2 py-0.5 text-secondary">
-              <span className="size-1 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="flex items-center gap-2 text-[11px]">
+            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-line bg-foreground/[0.03] px-2.5 py-0.5 text-secondary">
+              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Chile SII (demo)
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-emerald-600 dark:text-emerald-400 font-medium">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-0.5 text-emerald-600 dark:text-emerald-400 font-medium">
               Interactiva
             </span>
           </div>
         </div>
 
         {/* Inner App Shell (Sidebar + Main View) */}
-        <div className="grid grid-cols-[auto_1fr] min-h-[390px] sm:min-h-[440px] text-ink bg-base">
+        <div className="grid grid-cols-[auto_1fr] min-h-[440px] sm:min-h-[480px] text-ink bg-base">
           {/* Collapsible App Sidebar */}
           <aside
             className={cn(
               "border-r border-line bg-surface/50 flex flex-col justify-between transition-all duration-300 select-none",
-              collapsed ? "w-13 sm:w-14" : "w-44 sm:w-52"
+              collapsed ? "w-14 sm:w-16" : "w-48 sm:w-56"
             )}
           >
             <div>
               {/* Sidebar Header / Brand */}
-              <div className={cn("p-2.5 border-b border-line flex items-center", collapsed ? "justify-center" : "justify-between")}>
-                <div className="flex items-center gap-2 min-w-0">
-                  <Orb size={collapsed ? 24 : 28} state="idle" playful trackPointer={false} className="shrink-0" />
+              <div className={cn("p-3 border-b border-line flex items-center", collapsed ? "justify-center" : "justify-between")}>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Orb size={collapsed ? 26 : 32} state="idle" playful trackPointer={false} className="shrink-0" />
                   {!collapsed && (
                     <div className="min-w-0">
                       <p className="truncate text-xs font-semibold tracking-tight text-ink">Orbix</p>
-                      <p className="truncate text-[9px] text-muted">Andes SpA</p>
+                      <p className="truncate text-[10px] text-muted">Andes SpA</p>
                     </div>
                   )}
                 </div>
@@ -117,7 +117,7 @@ export function ProductPreview({ className }: { className?: string }) {
                     className="p-1 rounded-md text-muted hover:text-ink hover:bg-foreground/[0.05] transition-colors"
                     title="Contraer menú"
                   >
-                    <PanelLeft size={13} />
+                    <PanelLeft size={14} />
                   </button>
                 )}
               </div>
