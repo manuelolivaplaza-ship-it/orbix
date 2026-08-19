@@ -34,6 +34,7 @@ import type {
   Session,
   Vacation,
 } from "./types";
+import { applyMutations, type AgentMutation } from "./ai/mutations";
 
 const OPS_KEY = (userId: string) => `orbix.v3.${userId}`;
 
@@ -149,6 +150,7 @@ type StoreValue = {
   toggleRecurring: (id: string) => void;
   matchBankTx: (txId: string, invoiceId: string | null) => void;
   markPayablePaid: (id: string) => void;
+  applyAgentMutations: (mutations: AgentMutation[]) => void;
 };
 
 const StoreContext = createContext<StoreValue | null>(null);
@@ -801,6 +803,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     pushToast("Pago registrado", "success");
   }, [pushToast]);
 
+  const applyAgentMutations = useCallback((mutations: AgentMutation[]) => {
+    if (!mutations.length) return;
+    setState((prev) => applyMutations(prev, mutations));
+  }, []);
+
   const company = selectActiveCompany(state.companies, state.activeCompanyId);
 
   const value = useMemo<StoreValue>(
@@ -847,6 +854,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       toggleRecurring,
       matchBankTx,
       markPayablePaid,
+      applyAgentMutations,
     }),
     [
       ready,
@@ -891,6 +899,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       toggleRecurring,
       matchBankTx,
       markPayablePaid,
+      applyAgentMutations,
     ],
   );
 

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AppSidebar } from "./Sidebar";
+import { ChromeProvider, useChrome } from "./chrome";
 import { useStore } from "@/lib/store";
 import { Orb } from "@/components/orb/Orb";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -31,7 +32,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <SidebarProvider>
+    <ChromeProvider>
+      <AppShellInner>{children}</AppShellInner>
+    </ChromeProvider>
+  );
+}
+
+function AppShellInner({ children }: { children: React.ReactNode }) {
+  const { mode, setMode } = useChrome();
+  const [open, setOpen] = useState(true);
+
+  useEffect(() => {
+    if (mode === "chat") setOpen(true);
+  }, [mode]);
+
+  return (
+    <SidebarProvider
+      open={open}
+      onOpenChange={(next) => {
+        if (mode === "chat" && !next) setMode("platform");
+        setOpen(next);
+      }}
+      style={
+        {
+          "--sidebar-width": mode === "chat" ? "22.5rem" : "13rem",
+          "--sidebar-width-mobile": mode === "chat" ? "22rem" : "16rem",
+        } as React.CSSProperties
+      }
+    >
       <AppSidebar />
       <SidebarInset>
         <div className="flex h-12 items-center gap-2 border-b px-3 md:hidden">

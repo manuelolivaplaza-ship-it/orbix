@@ -59,10 +59,6 @@ export function mapCompany(row: CompanyRow): Company {
   };
 }
 
-function oneProfile(value: MemberRow["profiles"]): ProfileRow | null {
-  if (!value) return null;
-  return Array.isArray(value) ? (value[0] ?? null) : value;
-}
 
 function asRole(value: string | null | undefined): Role {
   if (value === "contador" || value === "rrhh" || value === "lectura" || value === "admin") {

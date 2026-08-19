@@ -22,6 +22,14 @@ import {
 import { useTheme } from "next-themes";
 import { Orb } from "@/components/orb/Orb";
 import { CommandPalette, useCommandPalette } from "@/components/app/CommandPalette";
+import dynamic from "next/dynamic";
+import { ModeSwitch } from "@/components/chat/ModeSwitch";
+import { useChrome } from "./chrome";
+
+const OrbChat = dynamic(
+  () => import("@/components/chat/OrbChat").then((mod) => mod.OrbChat),
+  { ssr: false },
+);
 import { SidebarIcon } from "./SidebarIcon";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import {
@@ -84,6 +92,7 @@ const GROUPS = [
 
 function Brand() {
   const { state, isMobile } = useSidebar();
+  const { orbState } = useChrome();
   const collapsed = state === "collapsed" && !isMobile;
   const orbSize = collapsed ? 24 : 40;
 
@@ -97,7 +106,7 @@ function Brand() {
     >
       <Orb
         size={orbSize}
-        state="idle"
+        state={orbState}
         className="shrink-0 transition-[width,height] duration-200 ease-out"
       />
       <div
@@ -117,7 +126,9 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { state, isMobile, toggleSidebar } = useSidebar();
+  const { mode } = useChrome();
   const collapsed = state === "collapsed" && !isMobile;
+  const chat = mode === "chat" && !collapsed;
   const { open, setOpen } = useCommandPalette();
   const { resolvedTheme, setTheme } = useTheme();
   const { state: app, session, setActiveCompany, logout, markNotificationsRead } = useStore();
@@ -151,6 +162,8 @@ export function AppSidebar() {
             </button>
           )}
         </div>
+        <ModeSwitch />
+        {chat ? null : (
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton tooltip="Buscar" onClick={() => setOpen(true)}>
@@ -170,10 +183,13 @@ export function AppSidebar() {
             </SidebarMenuItem>
           ) : null}
         </SidebarMenu>
+        )}
       </SidebarHeader>
 
-      <SidebarContent>
-        {GROUPS.map((group) => (
+      <SidebarContent className={chat ? "overflow-hidden p-0" : undefined}>
+        {chat ? (
+          <OrbChat />
+        ) : GROUPS.map((group) => (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
